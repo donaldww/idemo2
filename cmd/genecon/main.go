@@ -38,7 +38,8 @@ func printGroup(searchResult []int, names names.NodeID) {
 
 func printHeader() {
 	fmt.Println()
-	fmt.Println(`IG17 Consensus Group Randomizer
+	fmt.Println(`
+IG17 Consensus Group Randomizer
 -------------------------------
 
 - A new consensus group and leader is
