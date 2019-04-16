@@ -1,19 +1,21 @@
 package main
 
-import "fmt"
-import "math/rand"
-import "time"
+import (
+	"fmt"
+	"math/rand"
+	"time"
+
+	"github.com/donaldww/idemo/testdata/names"
+)
 
 const numberOfNodes = 13
 
 func main() {
-	var result = randomList(numberOfNodes, len(ids))
+	var result = randomList(numberOfNodes, len(names.IDs))
 	// fmt.Println(result)
 	printHeader()
-	printGroup(result, ids)
+	printGroup(result, names.IDs)
 	fmt.Println()
-
-	// printAll()
 }
 
 /*
@@ -24,8 +26,7 @@ func printAll() {
 }
 */
 
-func printGroup(searchResult []int, names NodeID) {
-
+func printGroup(searchResult []int, names names.NodeID) {
 	leader := randomLeader()
 	for i, key := range searchResult {
 		if i == leader {
