@@ -1,0 +1,20 @@
+# Ignore all files
+*
+
+# Unignore files with extensions
+!*.*
+
+# Unignore all directories
+!*/
+
+# MacOS Directory
+.DS_Store
+
+# Ignore files with these extensions
+*.pdf
+*.jpg
+*.png
+*.csv
+
+# Ignore some hidden files
+.idea/
