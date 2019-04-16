@@ -3,7 +3,7 @@ package names
 // NodeID is a list of node identifiers.
 type NodeID []string
 
-/* A list of 500 ids to represent nodes. */
+// IDs is a list of 500 ids that represent nodes.
 var IDs = NodeID{
 	"joshua.powell, 22.73.73.134",
 	"lily.roberts, 23.155.216.60",
