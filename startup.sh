@@ -2,6 +2,8 @@
 
 IPATH=~/Library/Infinigon
 
+echo "Starting idemo"
+
 # Clear the old IPATH directory.
 if [[ -d ${IPATH} ]]
 then
@@ -30,4 +32,4 @@ ps -axf | grep "[c]ockroach"
 # TODO: setup bin directory
 
 cd ${IPATH}/tmp
-echo ; echo "Ready to start idemo"
+echo ; echo "Ready"
