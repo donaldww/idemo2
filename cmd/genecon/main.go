@@ -38,6 +38,7 @@ func printGroup(searchResult []int, names names.NodeID) {
 
 func printHeader() {
 	fmt.Println()
+	
 	fmt.Println(`
 IG17 Consensus Group Randomizer
 -------------------------------
@@ -51,6 +52,7 @@ trusted execution environment (TEE).
 
 - IG17 uses RAFT consensus algorithm because
 it supports fault-tolerance and high performance.`)
+	
 	fmt.Println()
 }
 
