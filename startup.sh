@@ -29,5 +29,5 @@ ps -axf | grep "[c]ockroach"
 
 # TODO: setup bin directory
 
-cd ${IPATH}/tmpcd
+cd ${IPATH}/tmp
 echo ; echo "Ready to start idemo"
