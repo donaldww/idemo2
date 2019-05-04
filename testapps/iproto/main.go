@@ -467,11 +467,18 @@ func contLayout(w *widgets) ([]container.Option, error) {
 const rootID = "root"
 
 func main() {
+	// New returns new termbox based on Terminal. The program will run when
+	// double clicked in the finder.
 	t, err := termbox.New(termbox.ColorMode(terminalapi.ColorMode256))
 	if err != nil {
 		panic(err)
 	}
 	defer t.Close()
+
+	// Display the screen size for 2 seconds before proceeding.
+	tSize := t.Size()
+	fmt.Println(tSize)
+	time.Sleep(2 * time.Second)
 
 	c, err := container.New(t, container.ID(rootID))
 	if err != nil {
@@ -498,14 +505,17 @@ func main() {
 		panic(err)
 	}
 
-	// quitter is a function that handles keyboard input. keyboard.KeyF2 was
-	// added to test new keys. Key definitions are found in
-	// termdash/keyboard/keyboard.go
+	// quitter processes keyboard input.
+	//
+	// keyboard.KeyF2 added and tested successfully. Key definitions
+	// are found in termdash/keyboard/keyboard.go
 	quitter := func(k *terminalapi.Keyboard) {
 		if k.Key == keyboard.KeyEsc || k.Key == keyboard.KeyCtrlC || k.Key == keyboard.KeyF2 {
 			cancel()
 		}
 	}
+
+	// Runs the terminal dashboard.
 	if err := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter), termdash.RedrawInterval(redrawInterval)); err != nil {
 		panic(err)
 	}
