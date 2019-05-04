@@ -498,8 +498,11 @@ func main() {
 		panic(err)
 	}
 
+	// quitter is a function that handles keyboard input. keyboard.KeyF2 was
+	// added to test new keys. Key definitions are found in
+	// termdash/keyboard/keyboard.go
 	quitter := func(k *terminalapi.Keyboard) {
-		if k.Key == keyboard.KeyEsc || k.Key == keyboard.KeyCtrlC {
+		if k.Key == keyboard.KeyEsc || k.Key == keyboard.KeyCtrlC || k.Key == keyboard.KeyF2 {
 			cancel()
 		}
 	}
