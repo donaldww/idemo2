@@ -1,10 +1,7 @@
-package names
+package consensus
 
-// NodeID is a list of node identifiers.
-type NodeID []string
-
-// IDs is a list of 500 ids that represent blockchain nodes.
-var IDs = NodeID{
+// ids is a list of 500 ids that represent blockchain consGrp.
+var ids = []string{
 	"joshua.powell, 22.73.73.134",
 	"lily.roberts, 23.155.216.60",
 	"melanie.hodges, 21.248.245.133",

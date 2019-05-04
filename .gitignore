@@ -1,9 +1,3 @@
-# Ignore all files
-*
-
-# Unignore files with extensions
-!*.*
-
 # Unignore all directories
 !*/
 
@@ -14,7 +8,9 @@
 *.pdf
 *.jpg
 *.png
-*.csv
+
 
 # Ignore some hidden files
 .idea/
+/testapps/box/box
+/testapps/genecon/genecon
