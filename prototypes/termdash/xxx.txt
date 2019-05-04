@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Binary Iproto demonstrates the functionality of termdash and its various widgets.
+// Binary termdash demonstrates the functionality of termdash and its various widgets.
 // Exits when 'q' is pressed.
-package main
 
 import (
 	"context"
@@ -57,7 +56,7 @@ type widgets struct {
 	gauge    *gauge.Gauge
 	heartLC  *linechart.LineChart
 	barChart *barchart.BarChart
-	// donut    *donut.Donut
+	donut    *donut.Donut
 	leftB  *button.Button
 	rightB *button.Button
 	sineLC *linechart.LineChart
@@ -101,10 +100,10 @@ func newWidgets(ctx context.Context, c *container.Container) (*widgets, error) {
 		return nil, err
 	}
 
-	// don, err := newDonut(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	don, err := newDonut(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	leftB, rightB, sineLC, err := newSines(ctx)
 	if err != nil {
@@ -119,7 +118,7 @@ func newWidgets(ctx context.Context, c *container.Container) (*widgets, error) {
 		gauge:    g,
 		heartLC:  heartLC,
 		barChart: bc,
-		// donut:    don,
+		donut:    don,
 		leftB:  leftB,
 		rightB: rightB,
 		sineLC: sineLC,
@@ -149,7 +148,7 @@ func gridLayout(w *widgets, lt layoutType) ([]container.Option, error) {
 		grid.RowHeightPerc(25,
 			grid.Widget(w.segDist,
 				container.Border(linestyle.Light),
-				container.BorderTitle("Press Esc to quit"),
+				container.BorderTitle(" IG17 - Press Esc to quit "),
 			),
 		),
 		grid.RowHeightPerc(5,
@@ -178,7 +177,7 @@ func gridLayout(w *widgets, lt layoutType) ([]container.Option, error) {
 				grid.ColWidthPerc(50,
 					grid.Widget(w.rollT,
 						container.Border(linestyle.Light),
-						container.BorderTitle("A rolling text"),
+						container.BorderTitle("IG17 Consensus"),
 					),
 				),
 				grid.ColWidthPerc(50,
@@ -199,7 +198,7 @@ func gridLayout(w *widgets, lt layoutType) ([]container.Option, error) {
 			grid.RowHeightPerc(7,
 				grid.Widget(w.gauge,
 					container.Border(linestyle.Light),
-					container.BorderTitle("A Gauge"),
+					container.BorderTitle("IG17 - Processing Transactions"),
 					container.BorderColor(cell.ColorNumber(39)),
 				),
 			),
@@ -215,7 +214,7 @@ func gridLayout(w *widgets, lt layoutType) ([]container.Option, error) {
 			grid.RowHeightPerc(65,
 				grid.Widget(w.rollT,
 					container.Border(linestyle.Light),
-					container.BorderTitle("A rolling text"),
+					container.BorderTitle("IG17 IS PROCESSING..."),
 				),
 			),
 		)
@@ -261,11 +260,12 @@ func gridLayout(w *widgets, lt layoutType) ([]container.Option, error) {
 					container.BorderTitleAlignRight(),
 				),
 			),
-			grid.RowHeightPerc(21),// grid.Widget(w.donut,
-			// 	container.Border(linestyle.Light),
-			// 	container.BorderTitle("A Donut"),
-			// 	container.BorderTitleAlignRight(),
-			// ),
+			grid.RowHeightPerc(21),
+			grid.Widget(w.donut,
+				container.Border(linestyle.Light),
+				container.BorderTitle("A Donut"),
+				container.BorderTitleAlignRight(),
+			),
 
 			grid.RowHeightPerc(40,
 				grid.Widget(w.sineLC,
@@ -333,7 +333,7 @@ func contLayout(w *widgets) ([]container.Option, error) {
 		container.SplitVertical(
 			container.Left(
 				container.Border(linestyle.Light),
-				container.BorderTitle("A rolling text"),
+				container.BorderTitle("IG17 Sparks"),
 				container.PlaceWidget(w.rollT),
 			),
 			container.Right(
@@ -443,7 +443,7 @@ func contLayout(w *widgets) ([]container.Option, error) {
 						container.Border(linestyle.Light),
 						container.BorderTitle("A Donut"),
 						container.BorderTitleAlignRight(),
-						// container.PlaceWidget(w.donut),
+						container.PlaceWidget(w.donut),
 					),
 					container.Bottom(lcAndButtons...),
 					container.SplitPercent(30),
@@ -475,9 +475,9 @@ func main() {
 	defer t.Close()
 
 	// Display the screen size for 2 seconds before proceeding.
-	tSize := t.Size()
-	fmt.Println(tSize)
-	time.Sleep(2 * time.Second)
+	// tSize := t.Size()
+	// fmt.Println(tSize)
+	// time.Sleep(2 * time.Second)
 
 	// Open a container with rootID as ID.
 	//
@@ -488,8 +488,8 @@ func main() {
 		panic(err)
 	}
 
-	// context.Background returns an empty Context. Used as a top-level Context
-	// for incoming requests.
+	// context.Background returns an empty Context and cancel function.
+	// Used as a top-level context for incoming requests.
 	ctx, cancel := context.WithCancel(context.Background())
 	// Create the widgets used by this demo, using the context and container.
 	w, err := newWidgets(ctx, c)
@@ -513,10 +513,9 @@ func main() {
 
 	// quitter processes keyboard input.
 	//
-	// keyboard.KeyF2 added and tested successfully. Key definitions
-	// are found in termdash/keyboard/keyboard.go
+	// Key definitions are found in termdash/keyboard/keyboard.go
 	quitter := func(k *terminalapi.Keyboard) {
-		if k.Key == keyboard.KeyEsc || k.Key == keyboard.KeyCtrlC || k.Key == keyboard.KeyF2 {
+		if k.Key == keyboard.KeyEsc || k.Key == keyboard.KeyCtrlC {
 			cancel()
 		}
 	}
@@ -597,11 +596,11 @@ func newSegmentDisplay(ctx context.Context, updateText <-chan string) (*segmentd
 		cell.ColorRed,
 	}
 
-	text := "Termdash"
+	text := "Infinicoin" // Was Termdash in original program.
 	step := 0
 
 	go func() {
-		ticker := time.NewTicker(500 * time.Millisecond)
+		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 		for {
 			select {

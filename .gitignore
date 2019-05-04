@@ -12,6 +12,6 @@
 
 # Ignore some hidden files
 .idea/
-/testapps/box/box
-/testapps/genecon/genecon
-/testapps/Iproto/iproto
+/prototypes/box/box
+/prototypes/genecon/genecon
+/prototypes/termdash/termdash
