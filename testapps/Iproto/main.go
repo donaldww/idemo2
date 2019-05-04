@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Binary iproto demonstrates the functionality of termdash and its various widgets.
+// Binary Iproto demonstrates the functionality of termdash and its various widgets.
 // Exits when 'q' is pressed.
 package main
 
@@ -57,10 +57,10 @@ type widgets struct {
 	gauge    *gauge.Gauge
 	heartLC  *linechart.LineChart
 	barChart *barchart.BarChart
-	donut    *donut.Donut
-	leftB    *button.Button
-	rightB   *button.Button
-	sineLC   *linechart.LineChart
+	// donut    *donut.Donut
+	leftB  *button.Button
+	rightB *button.Button
+	sineLC *linechart.LineChart
 
 	buttons *layoutButtons
 }
@@ -101,10 +101,10 @@ func newWidgets(ctx context.Context, c *container.Container) (*widgets, error) {
 		return nil, err
 	}
 
-	don, err := newDonut(ctx)
-	if err != nil {
-		return nil, err
-	}
+	// don, err := newDonut(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	leftB, rightB, sineLC, err := newSines(ctx)
 	if err != nil {
@@ -119,10 +119,10 @@ func newWidgets(ctx context.Context, c *container.Container) (*widgets, error) {
 		gauge:    g,
 		heartLC:  heartLC,
 		barChart: bc,
-		donut:    don,
-		leftB:    leftB,
-		rightB:   rightB,
-		sineLC:   sineLC,
+		// donut:    don,
+		leftB:  leftB,
+		rightB: rightB,
+		sineLC: sineLC,
 	}, nil
 }
 
@@ -261,13 +261,12 @@ func gridLayout(w *widgets, lt layoutType) ([]container.Option, error) {
 					container.BorderTitleAlignRight(),
 				),
 			),
-			grid.RowHeightPerc(21,
-				grid.Widget(w.donut,
-					container.Border(linestyle.Light),
-					container.BorderTitle("A Donut"),
-					container.BorderTitleAlignRight(),
-				),
-			),
+			grid.RowHeightPerc(21),// grid.Widget(w.donut,
+			// 	container.Border(linestyle.Light),
+			// 	container.BorderTitle("A Donut"),
+			// 	container.BorderTitleAlignRight(),
+			// ),
+
 			grid.RowHeightPerc(40,
 				grid.Widget(w.sineLC,
 					container.Border(linestyle.Light),
@@ -444,7 +443,7 @@ func contLayout(w *widgets) ([]container.Option, error) {
 						container.Border(linestyle.Light),
 						container.BorderTitle("A Donut"),
 						container.BorderTitleAlignRight(),
-						container.PlaceWidget(w.donut),
+						// container.PlaceWidget(w.donut),
 					),
 					container.Bottom(lcAndButtons...),
 					container.SplitPercent(30),
@@ -480,12 +479,19 @@ func main() {
 	fmt.Println(tSize)
 	time.Sleep(2 * time.Second)
 
+	// Open a container with rootID as ID.
+	//
+	// Containers have many options that may be set such as margin and
+	// padding. The options are found in termdash/container/options.go
 	c, err := container.New(t, container.ID(rootID))
 	if err != nil {
 		panic(err)
 	}
 
+	// context.Background returns an empty Context. Used as a top-level Context
+	// for incoming requests.
 	ctx, cancel := context.WithCancel(context.Background())
+	// Create the widgets used by this demo, using the context and container.
 	w, err := newWidgets(ctx, c)
 	if err != nil {
 		panic(err)
