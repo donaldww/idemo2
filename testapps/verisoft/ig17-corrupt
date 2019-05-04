@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+export INFINIGON_HOME=/usr/local/Infinigon
+export INFINIGON_BIN=$INFINIGON_HOME/bin
+export INFINIGON_DEMO=$INFINIGON_HOME/demo
+
+cp $INFINIGON_DEMO/ig17-bad/ig17-core $INFINIGON_BIN/ig17-core
+echo "Core program overwritten by bad actor."

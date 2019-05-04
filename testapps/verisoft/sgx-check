@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+cd /usr/local/infinigon/bin
+shasum -c ig17-core.sha1
+cd -
