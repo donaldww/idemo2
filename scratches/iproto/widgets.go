@@ -10,7 +10,7 @@ import (
 	"math/rand"
 	"sync"
 	"time"
-
+	
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/container"
 	"github.com/mum4k/termdash/widgets/barchart"
@@ -40,7 +40,7 @@ type widgets struct {
 
 	buttons *layoutButtons
 }
-
+p
 // newWidgets sets up the widgets.
 func newWidgets(ctx context.Context, c *container.Container) (*widgets, error) {
 	updateText := make(chan string)
@@ -184,7 +184,7 @@ func newSines(ctx context.Context) (left, right *button.Button, lc *linechart.Li
 	}
 	step1 := 0
 	secondDist := &distance{v: 100}
-	go periodic(ctx, redrawInterval/3, func() error {
+	go periodic(ctx, prototypes.redrawInterval/3, func() error {
 		step1 = (step1 + 1) % len(inputs)
 		if err := lc.Series("first", rotateFloats(inputs, step1),
 			linechart.SeriesCellOpts(cell.FgColor(cell.ColorBlue)),
@@ -230,7 +230,7 @@ func setLayout(c *container.Container, w *widgets, lt layoutType) error {
 	if err != nil {
 		return err
 	}
-	return c.Update(rootID, gridOpts...)
+	return c.Update(prototypes.rootID, gridOpts...)
 }
 
 // layoutButtons are buttons that change the layout.

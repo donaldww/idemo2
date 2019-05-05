@@ -42,12 +42,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// newWidgets sets up the widgets using the context (ctx) and container (c).
-	w, err := newWidgets(ctx, c)
+	w, err := prototypes.newWidgets(ctx, c)
 	if err != nil {
 		panic(err)
 	}
 
-	lb, err := newLayoutButtons(c, w)
+	lb, err := prototypes.newLayoutButtons(c, w)
 	if err != nil {
 		panic(err)
 	}
