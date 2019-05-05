@@ -40,7 +40,7 @@ type widgets struct {
 
 	buttons *layoutButtons
 }
-p
+
 // newWidgets sets up the widgets.
 func newWidgets(ctx context.Context, c *container.Container) (*widgets, error) {
 	updateText := make(chan string)
