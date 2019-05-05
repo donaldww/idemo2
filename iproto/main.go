@@ -13,7 +13,8 @@
 // limitations under the License.
 
 // Binary textdemo displays a couple of Text widgets.
-// Exist when 'q' is pressed.
+// Exist when 'q' or 'Q' is pressed.
+
 package main
 
 import (
@@ -31,7 +32,8 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-const numberOfNodes = 25
+const numberOfNodes = 21
+const consensusDelay = 2 * time.Second
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
@@ -40,7 +42,8 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 	for {
 		t.Reset()
 		consensusCounter++
-		err := t.Write(fmt.Sprintf("\n CONSENSUS GROUP NO: %d\n\n", consensusCounter))
+		err := t.Write(fmt.Sprintf("\n CONSENSUS GROUP NO: %d\n\n", consensusCounter),
+			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
 		if err != nil {
 			panic(err)
 		}
@@ -61,7 +64,8 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 			return
 		}
 
-		err = t.Write(fmt.Sprintf("\n CONSENSUS GROUP LEADER CHOSEN ---> %s\n", leader))
+		err = t.Write(fmt.Sprintf("\n CONSENSUS GROUP LEADER CHOSEN: %s\n", leader),
+			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
 		if err != nil {
 			panic(err)
 		}
@@ -71,6 +75,7 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 }
 
 func main() {
+
 	// termbox.New returns a 'termbox' based on
 	// the user's default terminal: Terminal or iTerm.
 	t, err := termbox.New(termbox.ColorMode(terminalapi.ColorMode256))
@@ -81,110 +86,112 @@ func main() {
 
 	// Returns a context and cancel function.
 	ctx, cancel := context.WithCancel(context.Background())
-	borderless, err := text.New()
+
+	// Consensus Generator Window.
+	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
 
-	// // Borderless text window. Just writes into the larger text window.
-	// if err := borderless.Write("Text without border."); err != nil {
-	// 	panic(err)
-	// }
-
-	unicode, err := text.New()
+	// Transaction Generator Window
+	// TODO: Replace this widget with a guage.
+	transactionWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
-	if err := unicode.Write("你好，世界!"); err != nil {
-		panic(err)
-	}
 
-	trimmed, err := text.New()
+	// Pre Consensus Transaction Monitor
+	preConsensusWindow, err := text.New(text.WrapAtRunes())
 	if err != nil {
 		panic(err)
 	}
-	if err := trimmed.Write("Trims lines that don't fit onto the canvas because they are too long for its width.."); err != nil {
-		panic(err)
-	}
 
-	wrapped, err := text.New(text.WrapAtRunes())
+	// Pre Consensus Transaction Monitor
+	blockWriteWindow, err := text.New(text.WrapAtRunes())
 	if err != nil {
 		panic(err)
 	}
-	if err := wrapped.Write("Supports", text.WriteCellOpts(cell.FgColor(cell.ColorRed))); err != nil {
-		panic(err)
-	}
-	if err := wrapped.Write(" colors", text.WriteCellOpts(cell.FgColor(cell.ColorBlue))); err != nil {
-		panic(err)
-	}
-	if err := wrapped.Write(". Wraps long lines at rune boundaries if the WrapAtRunes() option is provided.\nSupports newline character to\ncreate\nnewlines\nmanually.\nTrims the content if it is too long.\n\n\n\nToo long."); err != nil {
-		panic(err)
-	}
 
-	rolled, err := text.New(text.RollContent(), text.WrapAtWords())
+	// SGX Monitor Window
+	softwareMonitorWindow, err := text.New(text.WrapAtRunes())
 	if err != nil {
 		panic(err)
 	}
-	if err := rolled.Write("Rolls the content upwards if RollContent() option is provided.\nSupports keyboard and mouse scrolling.\n\n"); err != nil {
-		panic(err)
-	}
 
-	// Write generated nodes into the 'rolled' window.
-	go writeConsensus(ctx, rolled, 3*time.Second)
-
+	// Container Layout.
 	c, err := container.New(
 		t,
 		container.Border(linestyle.Light),
-		container.BorderTitle(" IG17 DEMO - PRESS Q TO QUIT "),
+		// container.BorderColor(cell.ColorBlue),
+		container.BorderColor(cell.ColorDefault),
+		container.BorderTitle(" IG17 DEMO v0.1.0 - PRESS Q TO QUIT "),
 		container.SplitVertical(
+
 			container.Left(
+				container.SplitHorizontal(
+					container.Top(
+						container.Border(linestyle.Light),
+						// container.BorderColor(cell.ColorYellow),
+						container.BorderTitle(" Random Consensus Group Generator "),
+						container.PlaceWidget(consensusWindow),
+					),
+					container.Bottom(
+						// TODO: This widget should be a gauge.
+						container.Border(linestyle.Light),
+						// container.BorderColor(cell.ColorYellow),
+						container.BorderTitle(" Gathering Transactions "),
+						container.PlaceWidget(transactionWindow),
+					),
+					container.SplitPercent(80),
+				),
+			),
+			container.Right(
 				container.SplitHorizontal(
 					container.Top(
 						container.SplitHorizontal(
 							container.Top(
-								container.SplitVertical(
-									container.Left(
-										container.PlaceWidget(borderless),
-									),
-									container.Right(
-										container.Border(linestyle.Light),
-										container.BorderTitle("你好，世界!"),
-										container.PlaceWidget(unicode),
-									),
-								),
-							),
-							container.Bottom(
 								container.Border(linestyle.Light),
-								container.BorderTitle("Trims lines"),
-								container.PlaceWidget(trimmed),
+								// container.BorderColor(cell.ColorYellow),
+								container.BorderTitle(" Pre Consensus Transaction Monitor "),
+								container.PlaceWidget(preConsensusWindow),
 							),
+							container.Bottom(container.Border(linestyle.Light),
+								// container.BorderColor(cell.ColorYellow),
+								container.BorderTitle(" Block Creation Monitor "),
+								container.PlaceWidget(blockWriteWindow),
+							),
+							// TODO: Add a bottom-right widget.
 						),
 					),
 					container.Bottom(
 						container.Border(linestyle.Light),
-						container.BorderTitle("Wraps lines at rune boundaries"),
-						container.PlaceWidget(wrapped),
+						// container.BorderColor(cell.ColorYellow),
+						container.BorderTitle(" SGX Software Monitor "),
+						container.PlaceWidget(softwareMonitorWindow),
 					),
 				),
 			),
-			container.Right(
-				container.Border(linestyle.Light),
-				container.BorderTitle(" Random Consensus Group Generator "),
-				container.PlaceWidget(rolled),
-			),
-		),
+		), // SplitVertical
 	)
 	if err != nil {
 		panic(err)
 	}
 
+	// ******************
+	// ACTION GO ROUTINES
+	// ******************
+
+	// Write generated nodes into the 'consensusWindow' window.
+	go writeConsensus(ctx, consensusWindow, consensusDelay)
+
+	// Exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
 		if k.Key == 'q' || k.Key == 'Q' {
-			cancel()
+			cancel() // generated by contextWithCancel()
 		}
 	}
 
-	if err := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); err != nil {
-		panic(err)
+	if err2 := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); err2 != nil {
+		panic(err2)
 	}
 }
