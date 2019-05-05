@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"idemo/internal/consensus"
+	"github.com/donaldww/idemo/internal/consensus"
 )
 
 const numberOfNodes = 15
