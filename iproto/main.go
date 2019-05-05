@@ -31,32 +31,42 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-const numberOfNodes = 15
+const numberOfNodes = 25
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
+	consensusCounter := 0
+	leader := ""
 	for {
+		t.Reset()
+		consensusCounter++
+		err := t.Write(fmt.Sprintf("\n CONSENSUS GROUP NO: %d\n\n", consensusCounter))
+		if err != nil {
+			panic(err)
+		}
 		select {
 		default:
 			nodes := consensus.NewGroup(numberOfNodes)
 			for _, x := range *nodes {
-				format := fmt.Sprintf("%s\n", x.Node)
+				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
-					format = fmt.Sprintf("----> LEADER: %s\n", x.Node)
+					leader = x.Node
 				}
-				err := t.Write(format)
-				if err != nil {
-					panic(err)
+				err2 := t.Write(format)
+				if err2 != nil {
+					panic(err2)
 				}
 			}
 		case <-ctx.Done():
 			return
 		}
-		time.Sleep(delay)
-		err := t.Write("\n")
+
+		err = t.Write(fmt.Sprintf("\n CONSENSUS GROUP LEADER CHOSEN ---> %s\n", leader))
 		if err != nil {
 			panic(err)
 		}
+		time.Sleep(delay)
+
 	}
 }
 
@@ -69,14 +79,17 @@ func main() {
 	}
 	defer t.Close()
 
+	// Returns a context and cancel function.
 	ctx, cancel := context.WithCancel(context.Background())
 	borderless, err := text.New()
 	if err != nil {
 		panic(err)
 	}
-	if err := borderless.Write("Text without border."); err != nil {
-		panic(err)
-	}
+
+	// // Borderless text window. Just writes into the larger text window.
+	// if err := borderless.Write("Text without border."); err != nil {
+	// 	panic(err)
+	// }
 
 	unicode, err := text.New()
 	if err != nil {
@@ -116,14 +129,13 @@ func main() {
 		panic(err)
 	}
 
-	// TODO: Integrate the consensus randomizer here.
+	// Write generated nodes into the 'rolled' window.
 	go writeConsensus(ctx, rolled, 3*time.Second)
-	// go writeLines(ctx, rolled, 1*time.Second)
 
 	c, err := container.New(
 		t,
 		container.Border(linestyle.Light),
-		container.BorderTitle("PRESS Q TO QUIT"),
+		container.BorderTitle(" IG17 DEMO - PRESS Q TO QUIT "),
 		container.SplitVertical(
 			container.Left(
 				container.SplitHorizontal(
@@ -157,7 +169,7 @@ func main() {
 			),
 			container.Right(
 				container.Border(linestyle.Light),
-				container.BorderTitle("Rolls and scrolls content wrapped at words"),
+				container.BorderTitle(" Random Consensus Group Generator "),
 				container.PlaceWidget(rolled),
 			),
 		),
