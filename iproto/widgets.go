@@ -10,7 +10,7 @@ import (
 	"math/rand"
 	"sync"
 	"time"
-	
+
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/container"
 	"github.com/mum4k/termdash/widgets/barchart"
