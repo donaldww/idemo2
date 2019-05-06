@@ -1,16 +1,6 @@
-// Copyright 2018 Google Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Copyright 2019 by Donald Wilson. All rights reserved.
+// Use of this source code is governed by an MIT
+// license that can be found in the LICENSE file.
 
 // Binary textdemo displays a couple of Text widgets.
 // Exist when 'q' or 'Q' is pressed.
@@ -29,24 +19,46 @@ import (
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/termbox"
 	"github.com/mum4k/termdash/terminal/terminalapi"
+	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-const numberOfNodes = 21
-const consensusDelay = 2 * time.Second
+// playType indicates how to play a gauge.
+type playType int
+
+const (
+	playTypePercent playType = iota
+	playTypeAbsolute
+)
+
+const numberOfNodes = 23
+const consensusDelay = 1500 * time.Millisecond
+
+const splitPercent = 15
+
+const gaugeDelay = 1 * time.Millisecond
+const endGaugeWait = 500 * time.Millisecond
+const gaugeInterval = 1
+const maxTransactions = 2000
+const version = "v0.2.0"
+
+var waitForGauge = make(chan bool)
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 	consensusCounter := 0
 	leader := ""
+	_ = delay
+
 	for {
 		t.Reset()
 		consensusCounter++
-		err := t.Write(fmt.Sprintf("\n CONSENSUS GROUP NO: %d\n\n", consensusCounter),
+
+		_ = t.Write(fmt.Sprintf("\n CONSENSUS GROUP WAITING FOR BLOCK: "),
 			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
-		if err != nil {
-			panic(err)
-		}
+		_ = t.Write(fmt.Sprintf("%d\n\n", consensusCounter),
+			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+
 		select {
 		default:
 			nodes := consensus.NewGroup(numberOfNodes)
@@ -64,13 +76,60 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 			return
 		}
 
-		err = t.Write(fmt.Sprintf("\n CONSENSUS GROUP LEADER CHOSEN: %s\n", leader),
+		_ = t.Write(fmt.Sprintf("\n CONSENSUS GROUP LEADER: "),
 			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
-		if err != nil {
-			panic(err)
-		}
-		time.Sleep(delay)
+		_ = t.Write(fmt.Sprintf("%s\n", leader),
+			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
 
+		select {
+		case <-waitForGauge:
+			break
+		}
+
+		_ = t.Write(fmt.Sprintf("\n WRITING BLOCK "),
+			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
+		_ = t.Write(fmt.Sprintf("%d ", consensusCounter),
+			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+		_ = t.Write(fmt.Sprintf("--> "),
+			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+
+		for i := 0; i < 21; i++ {
+			_ = t.Write(fmt.Sprintf("💰"), // 💰
+				text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+			time.Sleep(40 * time.Millisecond)
+		}
+	}
+}
+
+// playGauge continuously changes the displayed percent value on the gauge by the
+// step once every delay. Exits when the context expires.
+func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duration, pt playType) {
+	progress := 0
+
+	ticker := time.NewTicker(delay)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C: // The delay.
+			switch pt {
+			case playTypePercent:
+				if err := g.Percent(progress); err != nil {
+					panic(err)
+				}
+			case playTypeAbsolute:
+				if err := g.Absolute(progress, maxTransactions); err != nil {
+					panic(err)
+				}
+			}
+			progress += step
+			if progress > maxTransactions {
+				progress = 0
+				waitForGauge <- true
+				time.Sleep(endGaugeWait)
+			}
+		case <-ctx.Done():
+			return
+		}
 	}
 }
 
@@ -93,9 +152,13 @@ func main() {
 		panic(err)
 	}
 
-	// Transaction Generator Window
-	// TODO: Replace this widget with a guage.
-	transactionWindow, err := text.New(text.RollContent(), text.WrapAtWords())
+	// Gauge: Transaction Generator Window
+	transactionGauge, err := gauge.New(
+		gauge.Height(1),
+		gauge.Color(cell.ColorBlue),
+		gauge.Border(linestyle.Light),
+		gauge.BorderTitle(" Processing Infinicoin Transactions "),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -118,33 +181,30 @@ func main() {
 		panic(err)
 	}
 
+	title := fmt.Sprintf(" IG17 DEMO %s - PRESS Q TO QUIT ", version)
 	// Container Layout.
 	c, err := container.New(
 		t,
 		container.Border(linestyle.Light),
 		// container.BorderColor(cell.ColorBlue),
 		container.BorderColor(cell.ColorDefault),
-		container.BorderTitle(" IG17 DEMO v0.1.0 - PRESS Q TO QUIT "),
+		container.BorderTitle(title),
 		container.SplitVertical(
-
 			container.Left(
 				container.SplitHorizontal(
 					container.Top(
-						container.Border(linestyle.Light),
-						// container.BorderColor(cell.ColorYellow),
-						container.BorderTitle(" Random Consensus Group Generator "),
-						container.PlaceWidget(consensusWindow),
+						container.PlaceWidget(transactionGauge),
 					),
 					container.Bottom(
-						// TODO: This widget should be a gauge.
 						container.Border(linestyle.Light),
 						// container.BorderColor(cell.ColorYellow),
-						container.BorderTitle(" Gathering Transactions "),
-						container.PlaceWidget(transactionWindow),
+						container.BorderTitle(" IG17 Consensus Group Randomizer "),
+						container.PlaceWidget(consensusWindow),
 					),
-					container.SplitPercent(80),
+					container.SplitPercent(splitPercent),
 				),
-			),
+			), // Left
+
 			container.Right(
 				container.SplitHorizontal(
 					container.Top(
@@ -160,7 +220,6 @@ func main() {
 								container.BorderTitle(" Block Creation Monitor "),
 								container.PlaceWidget(blockWriteWindow),
 							),
-							// TODO: Add a bottom-right widget.
 						),
 					),
 					container.Bottom(
@@ -168,9 +227,9 @@ func main() {
 						// container.BorderColor(cell.ColorYellow),
 						container.BorderTitle(" SGX Software Monitor "),
 						container.PlaceWidget(softwareMonitorWindow),
-					),
+					), // Bottom
 				),
-			),
+			), // Right
 		), // SplitVertical
 	)
 	if err != nil {
@@ -183,6 +242,7 @@ func main() {
 
 	// Write generated nodes into the 'consensusWindow' window.
 	go writeConsensus(ctx, consensusWindow, consensusDelay)
+	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
 
 	// Exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
