@@ -54,10 +54,8 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 		t.Reset()
 		consensusCounter++
 
-		_ = t.Write(fmt.Sprintf("\n CONSENSUS GROUP WAITING FOR BLOCK: "),
-			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
-		_ = t.Write(fmt.Sprintf("%d\n\n", consensusCounter),
-			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+		_ = writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
+		_ = writeColorf(t, cell.ColorRed, "%d\n\n", consensusCounter)
 
 		select {
 		default:
@@ -76,22 +74,17 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 			return
 		}
 
-		_ = t.Write(fmt.Sprintf("\n CONSENSUS GROUP LEADER: "),
-			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
-		_ = t.Write(fmt.Sprintf("%s\n", leader),
-			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+		_ = writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
+		_ = writeColorf(t, cell.ColorRed, "%s\n", leader)
 
 		select {
 		case <-waitForGauge:
 			break
 		}
 
-		_ = t.Write(fmt.Sprintf("\n WRITING BLOCK "),
-			text.WriteCellOpts(cell.FgColor(cell.ColorBlue)))
-		_ = t.Write(fmt.Sprintf("%d ", consensusCounter),
-			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
-		_ = t.Write(fmt.Sprintf("--> "),
-			text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+		_ = writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
+		_ = writeColorf(t, cell.ColorRed, "%d ", consensusCounter)
+		_ = writeColorf(t, cell.ColorRed, "--> ")
 
 		for i := 0; i < 21; i++ {
 			_ = t.Write(fmt.Sprintf("💰"), // 💰
@@ -186,7 +179,6 @@ func main() {
 	c, err := container.New(
 		t,
 		container.Border(linestyle.Light),
-		// container.BorderColor(cell.ColorBlue),
 		container.BorderColor(cell.ColorDefault),
 		container.BorderTitle(title),
 		container.SplitVertical(
@@ -197,7 +189,6 @@ func main() {
 					),
 					container.Bottom(
 						container.Border(linestyle.Light),
-						// container.BorderColor(cell.ColorYellow),
 						container.BorderTitle(" IG17 Consensus Group Randomizer "),
 						container.PlaceWidget(consensusWindow),
 					),
@@ -211,12 +202,10 @@ func main() {
 						container.SplitHorizontal(
 							container.Top(
 								container.Border(linestyle.Light),
-								// container.BorderColor(cell.ColorYellow),
 								container.BorderTitle(" Pre Consensus Transaction Monitor "),
 								container.PlaceWidget(preConsensusWindow),
 							),
 							container.Bottom(container.Border(linestyle.Light),
-								// container.BorderColor(cell.ColorYellow),
 								container.BorderTitle(" Block Creation Monitor "),
 								container.PlaceWidget(blockWriteWindow),
 							),
@@ -224,7 +213,6 @@ func main() {
 					),
 					container.Bottom(
 						container.Border(linestyle.Light),
-						// container.BorderColor(cell.ColorYellow),
 						container.BorderTitle(" SGX Software Monitor "),
 						container.PlaceWidget(softwareMonitorWindow),
 					), // Bottom
@@ -256,7 +244,7 @@ func main() {
 	}
 }
 
-// WriteColorf adds terminal Color and Sprintf parameters to the Write method.
+// writeColorf adds terminal Color and Sprintf parameters to the Write method.
 //
 // Params:
 //  _color: a cell.Color, such as cell.ColorRed, cell.ColorDefault, ... [termdash/cell/color.go]
@@ -265,7 +253,7 @@ func main() {
 //
 // Returns:
 //  err_: error returned by Write
-func WriteColorf(t *text.Text, _color cell.Color, _text string, _args ...interface{}) (err_ error) {
+func writeColorf(t *text.Text, _color cell.Color, _text string, _args ...interface{}) (err_ error) {
 	err_ = t.Write(fmt.Sprintf(_text, _args...), text.WriteCellOpts(cell.FgColor(_color)))
 	return
 }
