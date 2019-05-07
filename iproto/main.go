@@ -255,3 +255,17 @@ func main() {
 		panic(err2)
 	}
 }
+
+// WriteColorf adds terminal Color and Sprintf parameters to the Write method.
+//
+// Params:
+//  _color: a cell.Color, such as cell.ColorRed, cell.ColorDefault, ... [termdash/cell/color.go]
+//  _text: a Printf/Sprintf-style format string
+//  _args: an optional list of comma-separated arguments (varags)
+//
+// Returns:
+//  err_: error returned by Write
+func WriteColorf(t *text.Text, _color cell.Color, _text string, _args ...interface{}) (err_ error) {
+	err_ = t.Write(fmt.Sprintf(_text, _args...), text.WriteCellOpts(cell.FgColor(_color)))
+	return
+}
