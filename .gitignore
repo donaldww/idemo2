@@ -12,8 +12,20 @@
 
 # Ignore some hidden files
 .idea/
+<<<<<<< Updated upstream
 /scratches/box/box
 /scratches/gencon/gencon
 /scratches/termdash/termdash
 /iproto/iproto*
 .Ulysses-Group.plist
+||||||| merged common ancestors
+/testapps/box/box
+/testapps/genecon/genecon
+/testapps/iproto/iproto
+=======
+/scratches/box/box
+/scratches/gencon/gencon
+/scratches/termdash/termdash
+/iproto/iproto*
+/.Ulysses-Group.plist
+>>>>>>> Stashed changes
