@@ -22,6 +22,8 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
+const version = "v0.2.1
+
 // playType indicates how to play a gauge.
 type playType int
 
@@ -40,7 +42,6 @@ const gaugeDelay = 1 * time.Millisecond
 const endGaugeWait = 500 * time.Millisecond
 const gaugeInterval = 1
 const maxTransactions = 2000
-const version = "v0.2.0"
 
 var waitForGauge = make(chan bool)
 
