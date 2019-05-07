@@ -4,7 +4,6 @@
 
 // Binary textdemo displays a couple of Text widgets.
 // Exist when 'q' or 'Q' is pressed.
-
 package main
 
 import (
@@ -32,6 +31,7 @@ const (
 )
 
 const numberOfNodes = 23
+const numberOfMoneyBags = 21
 const consensusDelay = 1500 * time.Millisecond
 
 const splitPercent = 15
@@ -86,9 +86,8 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 		writeColorf(t, cell.ColorRed, "%d ", consensusCounter)
 		writeColorf(t, cell.ColorRed, "--> ")
 
-		for i := 0; i < 21; i++ {
-			_ = t.Write(fmt.Sprintf("💰"), // 💰
-				text.WriteCellOpts(cell.FgColor(cell.ColorRed)))
+		for i := 0; i < numberOfMoneyBags; i++ {
+			writeColorf(t, cell.ColorRed, "💰")
 			time.Sleep(40 * time.Millisecond)
 		}
 	}
@@ -157,24 +156,25 @@ func main() {
 	}
 
 	// Pre Consensus Transaction Monitor
-	preConsensusWindow, err := text.New(text.WrapAtRunes())
+	preConsensusWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
 
 	// Pre Consensus Transaction Monitor
-	blockWriteWindow, err := text.New(text.WrapAtRunes())
+	blockWriteWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
 
 	// SGX Monitor Window
-	softwareMonitorWindow, err := text.New(text.WrapAtRunes())
+	softwareMonitorWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
 
 	title := fmt.Sprintf(" IG17 DEMO %s - PRESS Q TO QUIT ", version)
+
 	// Container Layout.
 	c, err := container.New(
 		t,
@@ -182,6 +182,7 @@ func main() {
 		container.BorderColor(cell.ColorDefault),
 		container.BorderTitle(title),
 		container.SplitVertical(
+			// Left Container.
 			container.Left(
 				container.SplitHorizontal(
 					container.Top(
@@ -194,8 +195,9 @@ func main() {
 					),
 					container.SplitPercent(splitPercent),
 				),
-			), // Left
+			),
 
+			// Right Container.
 			container.Right(
 				container.SplitHorizontal(
 					container.Top(
@@ -224,12 +226,13 @@ func main() {
 		panic(err)
 	}
 
-	// ******************
-	// ACTION GO ROUTINES
-	// ******************
+	// **********
+	// GOROUTINES
+	// **********
 
-	// Write generated nodes into the 'consensusWindow' window.
+	// Display randomly generated nodes in the 'consensusWindow'.
 	go writeConsensus(ctx, consensusWindow, consensusDelay)
+	// Play the transaction gathering gauge.
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
 
 	// Exit handler.
