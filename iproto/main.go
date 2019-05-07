@@ -54,8 +54,8 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 		t.Reset()
 		consensusCounter++
 
-		_ = writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
-		_ = writeColorf(t, cell.ColorRed, "%d\n\n", consensusCounter)
+		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
+		writeColorf(t, cell.ColorRed, "%d\n\n", consensusCounter)
 
 		select {
 		default:
@@ -74,17 +74,17 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 			return
 		}
 
-		_ = writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
-		_ = writeColorf(t, cell.ColorRed, "%s\n", leader)
+		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
+		writeColorf(t, cell.ColorRed, "%s\n", leader)
 
 		select {
 		case <-waitForGauge:
 			break
 		}
 
-		_ = writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
-		_ = writeColorf(t, cell.ColorRed, "%d ", consensusCounter)
-		_ = writeColorf(t, cell.ColorRed, "--> ")
+		writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
+		writeColorf(t, cell.ColorRed, "%d ", consensusCounter)
+		writeColorf(t, cell.ColorRed, "--> ")
 
 		for i := 0; i < 21; i++ {
 			_ = t.Write(fmt.Sprintf("💰"), // 💰
