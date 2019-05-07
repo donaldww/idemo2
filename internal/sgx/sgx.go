@@ -12,6 +12,17 @@ import (
 	"strings"
 )
 
+type EnclaveItem struct {
+	Path string
+	Type string
+	Shasum string
+}
+
+type Enclave []EnclaveItem
+
+var VerifiedEnclave EnclaveItem
+var CompomisedEnclave EnclaveItem
+
 // Get the state of the enclave when the program starts.
 func init() {
 	Scan()
@@ -22,7 +33,7 @@ func IsInfinibinExist() bool {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if _, err := os.Stat(ibin); err != nil {
+	if _, err = os.Stat(ibin); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
@@ -39,6 +50,7 @@ func Scan() {
 
 	err = filepath.Walk(path, walk)
 	if err != nil {
+		//TODO: Capture the records here.
 		fmt.Println(err)
 		os.Exit(1)
 	}
