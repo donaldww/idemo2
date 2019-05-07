@@ -22,7 +22,7 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-const version = "v0.2.1
+const version = "v0.2.1"
 
 // playType indicates how to play a gauge.
 type playType int
