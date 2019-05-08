@@ -7,17 +7,15 @@ package main
 import (
 	"fmt"
 	"time"
-	
+
 	"github.com/donaldww/idemo/internal/sgx"
 )
-
 
 func main() {
 	quit := make(chan bool)
 	start := make(chan bool)
-	
+
 	go func() {
-		
 		for {
 			select {
 			case <-start:
@@ -26,17 +24,33 @@ func main() {
 				fmt.Println("\n  Received stop signal.")
 				return
 			default:
-				fmt.Println()
 				sgx.Scan()
+				sgx.PrintScanned()
+				// root, err := sgx.InfiniBin()
+				// if err != nil {
+				// 	log.Panic(err)
+				// }
+				// result, err2 := sgx.Md5All(root)
+				// if err2 != nil {
+				// 	log.Panic(err2)
+				// }
+				//
+				// var paths []string
+				// for path := range result {
+				// 	paths = append(paths, path)
+				// }
+				// sort.Strings(paths)
+				// for _, path := range paths {
+				// 	fmt.Printf("%x  %s\n", result[path], path)
+				// }
+				// fmt.Println()
 				time.Sleep(2 * time.Second)
+
 			}
 		}
 	}()
-	
+
 	start <- false
-	
-	time.Sleep(12 * time.Second)
-	
+	time.Sleep(21 * time.Second)
 	quit <- true
-	
 }

@@ -5,59 +5,67 @@
 package sgx
 
 import (
+	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-type EnclaveItem struct {
-	Path string
-	Type string
+// enclaveItem represents a file or directory in the enclave.
+type enclaveItem struct {
+	Path   string
+	Type   string
+	Md5    string
 	Shasum string
 }
 
-type Enclave []EnclaveItem
-
-var VerifiedEnclave EnclaveItem
-var CompomisedEnclave EnclaveItem
+var stableEnclave = make([]enclaveItem, 0)
+var scannedEnclave = make([]enclaveItem, 0)
+var currentEnclave *[]enclaveItem
 
 // Get the state of the enclave when the program starts.
 func init() {
+	currentEnclave = &stableEnclave
 	Scan()
-}
-
-func IsInfinibinExist() bool {
-	ibin, err := infiniBin()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err = os.Stat(ibin); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
+	PrintStable()
+	currentEnclave = &scannedEnclave
 }
 
 // Scan scans the Infinigon SGX enclave binaries.
 func Scan() {
-	path, err := infiniBin()
+	path, err := InfiniBin()
 	if err != nil {
 		log.Panic(err)
 	}
-
 	err = filepath.Walk(path, walk)
 	if err != nil {
-		//TODO: Capture the records here.
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 }
 
-// infiniBin returns a path to user's infinigon 'bin' directory.
-func infiniBin() (ret_ string, err_ error) {
+func PrintStable() {
+	fmt.Println("STABLE ENCLAVE")
+	for _, x := range stableEnclave {
+		fmt.Println(x)
+	}
+}
+
+func PrintScanned() {
+	fmt.Println("SCANNED ENCLAVE")
+	for _, x := range scannedEnclave {
+		fmt.Println(x)
+	}
+	scannedEnclave = nil
+}
+
+// InfiniBin returns a path to user's infinigon 'bin' directory.
+func InfiniBin() (ret_ string, err_ error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -72,24 +80,29 @@ func infiniBin() (ret_ string, err_ error) {
 // walk process information about each file and directory in the SGX enclave.
 func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 	_, _ = _info, _err
-	err_ = nil
 
 	fileInfo, err := os.Stat(_path)
 	if err != nil {
 		return
 	}
 
+	shasum := fmt.Sprintf("%x", sha256.Sum256([]byte(_path)))
+
 	mode := fileInfo.Mode()
 	if mode.IsRegular() {
-		fmt.Println("f", _path)
-		return
+		data, err2 := ioutil.ReadFile(_path)
+		if err2 != nil {
+			log.Panic(err2)
+		}
+		res := md5.Sum(data)
+		md5 := fmt.Sprintf("%x", res)
+		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "f", md5, shasum})
+	} else if mode.IsDir() {
+		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "d", "", shasum})
+	} else {
+		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "o", "", shasum})
 	}
 
-	if mode.IsDir() {
-		fmt.Println("d", _path)
-		return
-	}
-
-	fmt.Println(_path)
+	err_ = nil
 	return
 }
