@@ -11,6 +11,8 @@ import (
 	"github.com/donaldww/idemo/internal/sgx"
 )
 
+const scanInterval = 2
+
 func main() {
 	quit := make(chan bool)
 	start := make(chan bool)
@@ -25,17 +27,18 @@ func main() {
 				return
 			default:
 				sgx.Scan()
-				// TODO: call function to compare enclave results here.
-				// sgx.PrintScanned()
-				sgx.Reset()
-
-				time.Sleep(2 * time.Second)
-
+				err := sgx.IsValid()
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					fmt.Println("IG17 Enclave Scan: PASSED")
+				}
+				time.Sleep(scanInterval * time.Second)
 			}
 		}
 	}()
 
 	start <- false
-	time.Sleep(3 * time.Second)
+	time.Sleep(100 * time.Second)
 	quit <- true
 }

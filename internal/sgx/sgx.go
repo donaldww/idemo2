@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // enclaveItem represents a file or directory in the enclave.
@@ -36,7 +37,6 @@ var currentEnclave *[]enclaveItem
 func init() {
 	currentEnclave = &stableEnclave
 	Scan()
-	// PrintStable()
 	currentEnclave = &scannedEnclave
 }
 
@@ -49,7 +49,7 @@ func init() {
 
 // Scan scans the Infinigon SGX enclave binaries.
 func Scan() {
-	path, err := InfiniBin()
+	path, err := infiniBin()
 	if err != nil {
 		log.Panic(err)
 	}
@@ -58,6 +58,38 @@ func Scan() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+/*************
+	Errors
+**************/
+
+type EnclaveError struct {
+	When time.Time
+	What string
+}
+
+func (e EnclaveError) Error() string {
+	return fmt.Sprintf("%v: %v", e.When, e.What)
+}
+
+// IsValid determines if a scanned directory matches a valid one.
+func IsValid() (err_ error) {
+	err_ = nil
+
+	fmt.Println("Valid Enclave:", len(stableEnclave))
+	fmt.Println("Scanned Enclave:", len(scannedEnclave))
+
+	if len(stableEnclave) != len(scannedEnclave) {
+		Reset()
+		return EnclaveError{
+			time.Date(1989, 3, 15, 22, 30, 0, 0, time.UTC),
+			"File mismatch: FAIL",
+		}
+	}
+
+	Reset()
+	return
 }
 
 // Reset the scannedEnclave to nil before the next run.
@@ -74,7 +106,7 @@ func PrintScanned() {
 }
 
 // InfiniBin returns a path to user's infinigon 'bin' directory.
-func InfiniBin() (ret_ string, err_ error) {
+func infiniBin() (ret_ string, err_ error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -97,16 +129,19 @@ func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 	}
 	mode := fileInfo.Mode()
 
-	if mode.IsRegular() {
-		data, err2 := ioutil.ReadFile(_path)
-		if err2 != nil {
-			log.Panic(err2)
-		}
-		newMd5 := fmt.Sprintf("%x", md5.Sum(data))
+	switch {
+	case mode.IsRegular():
+		newMd5 := func(p string) string {
+			data, err2 := ioutil.ReadFile(p)
+			if err2 != nil {
+				log.Panic(err2)
+			}
+			return fmt.Sprintf("%x", md5.Sum(data))
+		}(_path)
 		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "f", newMd5, shasum})
-	} else if mode.IsDir() {
+	case mode.IsDir():
 		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "d", "", shasum})
-	} else {
+	default:
 		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "o", "", shasum})
 	}
 
