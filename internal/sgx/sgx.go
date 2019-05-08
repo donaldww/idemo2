@@ -18,34 +18,28 @@ import (
 
 // enclaveItem represents a file or directory in the enclave.
 type enclaveItem struct {
-	Path   string
 	Type   string
 	Md5    string
 	Shasum string
 }
 
+type enclaveMap map[string]enclaveItem
+
+var stableEnclave = enclaveMap{}
+var scannedEnclave = enclaveMap{}
+var oneTime = true
+
 // println prints an enclave item.
 func (e enclaveItem) println() {
-	fmt.Println(e.Path, e.Type, e.Md5, e.Shasum)
+	fmt.Println(e.Type, e.Md5, e.Shasum)
 }
-
-var stableEnclave = make([]enclaveItem, 0)
-var scannedEnclave = make([]enclaveItem, 0)
-var currentEnclave *[]enclaveItem
 
 // Get the state of the enclave when the program starts.
 func init() {
-	currentEnclave = &stableEnclave
+	oneTime = true
 	Scan()
-	currentEnclave = &scannedEnclave
+	oneTime = false
 }
-
-// func PrintStable() {
-// 	fmt.Println("STABLE ENCLAVE")
-// 	for _, e := range stableEnclave {
-// 		e.Println()
-// 	}
-// }
 
 // Scan scans the Infinigon SGX enclave binaries.
 func Scan() {
@@ -58,64 +52,6 @@ func Scan() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-/*************
-	Errors
-**************/
-
-type EnclaveError struct {
-	When time.Time
-	What string
-}
-
-func (e EnclaveError) Error() string {
-	return fmt.Sprintf("%v: %v", e.When, e.What)
-}
-
-// IsValid determines if a scanned directory matches a valid one.
-func IsValid() (err_ error) {
-	err_ = nil
-
-	fmt.Println("Valid Enclave:", len(stableEnclave))
-	fmt.Println("Scanned Enclave:", len(scannedEnclave))
-
-	if len(stableEnclave) != len(scannedEnclave) {
-		Reset()
-		return EnclaveError{
-			time.Date(1989, 3, 15, 22, 30, 0, 0, time.UTC),
-			"File mismatch: FAIL",
-		}
-	}
-
-	Reset()
-	return
-}
-
-// Reset the scannedEnclave to nil before the next run.
-func Reset() {
-	scannedEnclave = nil
-}
-
-func PrintScanned() {
-	fmt.Println("SCANNED ENCLAVE")
-	for _, x := range scannedEnclave {
-		x.println()
-	}
-	Reset()
-}
-
-// InfiniBin returns a path to user's infinigon 'bin' directory.
-func infiniBin() (ret_ string, err_ error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	s := []string{home, ".infinigon/bin"}
-	ret_ = strings.Join(s, "/")
-	err_ = nil
-	return
 }
 
 // walk process information about each file and directory in the SGX enclave.
@@ -138,13 +74,67 @@ func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 			}
 			return fmt.Sprintf("%x", md5.Sum(data))
 		}(_path)
-		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "f", newMd5, shasum})
+		if oneTime {
+			stableEnclave[_path] = enclaveItem{Type: "f", Md5: newMd5, Shasum: shasum}
+		} else {
+			scannedEnclave[_path] = enclaveItem{Type: "f", Md5: newMd5, Shasum: shasum}
+		}
 	case mode.IsDir():
-		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "d", "", shasum})
+		// break
+		// stableEnclave[_path] = enclaveItem{Type: "d", Md5: "", Shasum: shasum}
 	default:
-		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "o", "", shasum})
+		// break
+		// stableEnclave[_path] = enclaveItem{Type: "u", Md5: "", Shasum: shasum}
 	}
 
+	err_ = nil
+	return
+}
+
+/*************
+	Errors
+**************/
+
+// EnclaveError is used to express enclave errors.
+type enclaveError struct {
+	When time.Time
+	What string
+}
+
+func (e enclaveError) Error() string {
+	return fmt.Sprintf("%v: %v", e.When, e.What)
+}
+
+// IsValid determines if a scanned directory matches a valid one.
+func IsValid() (err_ error) {
+	err_ = nil
+
+	fmt.Println("Valid Enclave:", len(stableEnclave))
+	fmt.Println("Scanned Enclave:", len(scannedEnclave))
+
+	if len(stableEnclave) != len(scannedEnclave) {
+		return enclaveError{
+			time.Date(1989, 3, 15, 22, 30, 0, 0, time.UTC),
+			"File mismatch: FAIL",
+		}
+	}
+	return
+}
+
+// Reset the scannedEnclave to nil before the next run.
+func Reset() {
+	scannedEnclave = enclaveMap{}
+}
+
+// InfiniBin returns a path to user's infinigon 'bin' directory.
+func infiniBin() (ret_ string, err_ error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	s := []string{home, ".infinigon/bin"}
+	ret_ = strings.Join(s, "/")
 	err_ = nil
 	return
 }

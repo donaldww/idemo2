@@ -14,7 +14,7 @@ import (
 const scanInterval = 2
 
 func main() {
-	quit := make(chan bool)
+	stop := make(chan bool)
 	start := make(chan bool)
 
 	go func() {
@@ -22,7 +22,7 @@ func main() {
 			select {
 			case <-start:
 				fmt.Println("\n  Received start signal.")
-			case <-quit:
+			case <-stop:
 				fmt.Println("\n  Received stop signal.")
 				return
 			default:
@@ -33,12 +33,13 @@ func main() {
 				} else {
 					fmt.Println("IG17 Enclave Scan: PASSED")
 				}
+				sgx.Reset()
 				time.Sleep(scanInterval * time.Second)
 			}
 		}
 	}()
 
-	start <- false
+	start <- true
 	time.Sleep(100 * time.Second)
-	quit <- true
+	stop <- true
 }
