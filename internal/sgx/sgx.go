@@ -145,14 +145,14 @@ func IsValid() (err_ error) {
 		ee = enclaveError{
 			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
 				t.Location()),
-			"File removed from IG17 enclave: FAIL",
+			"IG17-SGX enclave: System file removed",
 		}
 		return ee
 	case diff < 0:
 		ee = enclaveError{
 			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
 				t.Location()),
-			"File added to IG17 enclave: FAIL",
+			"IG17-SGX enclave: Rogue file added",
 		}
 		return ee
 	default:
@@ -167,7 +167,7 @@ func checkFileStatus() (err_ error) {
 	for _, x := range scannedList {
 		if scannedEnclave[x].Type == "f" {
 			if scannedEnclave[x].Md5 != stableEnclave[x].Md5 {
-				msg := fmt.Sprintf("IG17 Enclave file %s has been tampered with: FAIL",
+				msg := fmt.Sprintf("IG17-SGX enclave: '%s' chksum failed",
 					scannedEnclave[x].Name)
 				ee := enclaveError{
 					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
@@ -181,7 +181,7 @@ func checkFileStatus() (err_ error) {
 	for _, x := range scannedList {
 		if scannedEnclave[x].Shasum != stableEnclave[x].Shasum {
 			if scannedEnclave[x].Type == "f" {
-				msg := fmt.Sprintf("IG17 Enclave Filename %s has been changed to %s: FAIL",
+				msg := fmt.Sprintf("IG17-SGX enclave: name change '%s=%s'",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
 				ee := enclaveError{
 					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
@@ -190,7 +190,7 @@ func checkFileStatus() (err_ error) {
 				}
 				return ee
 			} else {
-				msg := fmt.Sprintf("IG17 Enclave Directory %s has been changed to %s: FAIL",
+				msg := fmt.Sprintf("IG17-SGX enclave: directory name change '%s=%s'",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
 				ee := enclaveError{
 					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),

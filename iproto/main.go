@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/donaldww/idemo/internal/consensus"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/container"
@@ -20,9 +19,12 @@ import (
 	"github.com/mum4k/termdash/terminal/terminalapi"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
+
+	"github.com/donaldww/idemo/internal/consensus"
+	"github.com/donaldww/idemo/internal/sgx"
 )
 
-const version = "v0.2.1"
+const version = "v0.3.0"
 
 // playType indicates how to play a gauge.
 type playType int
@@ -36,6 +38,9 @@ const numberOfNodes = 23
 const numberOfMoneyBags = 21
 const consensusDelay = 1500 * time.Millisecond
 
+const loggerDelay = 2000 * time.Millisecond
+const loggerRefresh = 13
+
 const splitPercent = 15
 
 const gaugeDelay = 1 * time.Millisecond
@@ -44,6 +49,34 @@ const gaugeInterval = 1
 const maxTransactions = 2000
 
 var waitForGauge = make(chan bool)
+
+// writeLogger logs messages into the SGW monitor widget.
+func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
+	//TODO: Re-write write logger as a general purpose logger that receives
+	// messages using buffered channels.
+	counter := 0
+	for {
+		sgx.Scan()
+		tNow := time.Now()
+		err := sgx.IsValid()
+		if counter > loggerRefresh {
+			t.Reset()
+			counter = 0
+		}
+		if err != nil {
+			writeColorf(t, cell.ColorRed, " %v\n", err)
+		} else {
+			writeColorf(t, cell.ColorGreen, " %s: %s\n", time.Date(
+				tNow.Year(), tNow.Month(), tNow.Day(), tNow.Hour(), tNow.Minute(),
+				tNow.Second(), tNow.Nanosecond(),
+				tNow.Location()),
+				"IG17-SGX enclave: No issues found!")
+		}
+		counter++
+		sgx.Reset()
+		time.Sleep(delay_)
+	}
+}
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
@@ -216,7 +249,7 @@ func main() {
 					),
 					container.Bottom(
 						container.Border(linestyle.Light),
-						container.BorderTitle(" SGX Software Monitor "),
+						container.BorderTitle(" SGX Security Monitor "),
 						container.PlaceWidget(softwareMonitorWindow),
 					), // Bottom
 				),
@@ -235,6 +268,8 @@ func main() {
 	go writeConsensus(ctx, consensusWindow, consensusDelay)
 	// Play the transaction gathering gauge.
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
+	// Logger
+	go writeLogger(ctx, softwareMonitorWindow, loggerDelay)
 
 	// Exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
