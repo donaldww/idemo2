@@ -23,6 +23,11 @@ type enclaveItem struct {
 	Shasum string
 }
 
+// Println prints an enclave item.
+func (e enclaveItem) Println() {
+	fmt.Println(e.Path, e.Type, e.Md5, e.Shasum)
+}
+
 var stableEnclave = make([]enclaveItem, 0)
 var scannedEnclave = make([]enclaveItem, 0)
 var currentEnclave *[]enclaveItem
@@ -51,15 +56,15 @@ func Scan() {
 
 func PrintStable() {
 	fmt.Println("STABLE ENCLAVE")
-	for _, x := range stableEnclave {
-		fmt.Println(x)
+	for _, e := range stableEnclave {
+		e.Println()
 	}
 }
 
 func PrintScanned() {
 	fmt.Println("SCANNED ENCLAVE")
 	for _, x := range scannedEnclave {
-		fmt.Println(x)
+		x.Println()
 	}
 	scannedEnclave = nil
 }

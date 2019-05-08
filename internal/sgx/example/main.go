@@ -26,24 +26,6 @@ func main() {
 			default:
 				sgx.Scan()
 				sgx.PrintScanned()
-				// root, err := sgx.InfiniBin()
-				// if err != nil {
-				// 	log.Panic(err)
-				// }
-				// result, err2 := sgx.Md5All(root)
-				// if err2 != nil {
-				// 	log.Panic(err2)
-				// }
-				//
-				// var paths []string
-				// for path := range result {
-				// 	paths = append(paths, path)
-				// }
-				// sort.Strings(paths)
-				// for _, path := range paths {
-				// 	fmt.Printf("%x  %s\n", result[path], path)
-				// }
-				// fmt.Println()
 				time.Sleep(2 * time.Second)
 
 			}
