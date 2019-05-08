@@ -18,6 +18,8 @@ import (
 
 // enclaveItem represents a file or directory in the enclave.
 type enclaveItem struct {
+	Name   string
+	Path   string
 	Type   string
 	Md5    string
 	Shasum string
@@ -26,7 +28,10 @@ type enclaveItem struct {
 type enclaveMap map[string]enclaveItem
 
 var stableEnclave = enclaveMap{}
+var stableList []string = nil
+
 var scannedEnclave = enclaveMap{}
+var scannedList []string = nil
 var oneTime = true
 
 // println prints an enclave item.
@@ -64,6 +69,8 @@ func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 		return
 	}
 	mode := fileInfo.Mode()
+	name := fileInfo.Name()
+	plainName := name
 
 	switch {
 	case mode.IsRegular():
@@ -74,17 +81,38 @@ func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 			}
 			return fmt.Sprintf("%x", md5.Sum(data))
 		}(_path)
+		name += ".f"
 		if oneTime {
-			stableEnclave[_path] = enclaveItem{Type: "f", Md5: newMd5, Shasum: shasum}
+			stableEnclave[name] =
+				enclaveItem{Name: plainName, Path: _path, Type: "f", Md5: newMd5, Shasum: shasum}
+			stableList = append(stableList, name)
 		} else {
-			scannedEnclave[_path] = enclaveItem{Type: "f", Md5: newMd5, Shasum: shasum}
+			scannedEnclave[name] =
+				enclaveItem{Name: plainName, Path: _path, Type: "f", Md5: newMd5, Shasum: shasum}
+			scannedList = append(scannedList, name)
 		}
 	case mode.IsDir():
-		// break
-		// stableEnclave[_path] = enclaveItem{Type: "d", Md5: "", Shasum: shasum}
+		name += ".d"
+		if oneTime {
+			stableEnclave[name] =
+				enclaveItem{Name: plainName, Path: _path, Type: "d", Md5: "", Shasum: shasum}
+			stableList = append(stableList, name)
+		} else {
+			scannedEnclave[name] =
+				enclaveItem{Name: plainName, Path: _path, Type: "d", Md5: "", Shasum: shasum}
+			scannedList = append(scannedList, name)
+		}
 	default:
-		// break
-		// stableEnclave[_path] = enclaveItem{Type: "u", Md5: "", Shasum: shasum}
+		name += ".u"
+		if oneTime {
+			stableEnclave[name] =
+				enclaveItem{Name: plainName, Path: _path, Type: "u", Md5: "", Shasum: shasum}
+			stableList = append(stableList, name)
+		} else {
+			scannedEnclave[name] =
+				enclaveItem{Name: plainName, Path: _path, Type: "u", Md5: "", Shasum: shasum}
+			scannedList = append(scannedList, name)
+		}
 	}
 
 	err_ = nil
@@ -108,14 +136,69 @@ func (e enclaveError) Error() string {
 // IsValid determines if a scanned directory matches a valid one.
 func IsValid() (err_ error) {
 	err_ = nil
+	ee := enclaveError{time.Time{}, ""}
+	diff := len(stableEnclave) - len(scannedEnclave)
+	t := time.Now()
 
-	fmt.Println("Valid Enclave:", len(stableEnclave))
-	fmt.Println("Scanned Enclave:", len(scannedEnclave))
+	switch {
+	case diff > 0:
+		ee = enclaveError{
+			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
+				t.Location()),
+			"File removed from IG17 enclave: FAIL",
+		}
+		return ee
+	case diff < 0:
+		ee = enclaveError{
+			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
+				t.Location()),
+			"File added to IG17 enclave: FAIL",
+		}
+		return ee
+	default:
+		return checkFileStatus()
+	}
+	return
+}
 
-	if len(stableEnclave) != len(scannedEnclave) {
-		return enclaveError{
-			time.Date(1989, 3, 15, 22, 30, 0, 0, time.UTC),
-			"File mismatch: FAIL",
+func checkFileStatus() (err_ error) {
+	err_ = nil
+	t := time.Now()
+	for _, x := range scannedList {
+		if scannedEnclave[x].Type == "f" {
+			if scannedEnclave[x].Md5 != stableEnclave[x].Md5 {
+				msg := fmt.Sprintf("IG17 Enclave file %s has been tampered with: FAIL",
+					scannedEnclave[x].Name)
+				ee := enclaveError{
+					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
+						t.Location()),
+					msg,
+				}
+				return ee
+			}
+		}
+	}
+	for _, x := range scannedList {
+		if scannedEnclave[x].Shasum != stableEnclave[x].Shasum {
+			if scannedEnclave[x].Type == "f" {
+				msg := fmt.Sprintf("IG17 Enclave Filename %s has been changed to %s: FAIL",
+					stableEnclave[x].Name, scannedEnclave[x].Name)
+				ee := enclaveError{
+					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
+						t.Location()),
+					msg,
+				}
+				return ee
+			} else {
+				msg := fmt.Sprintf("IG17 Enclave Directory %s has been changed to %s: FAIL",
+					stableEnclave[x].Name, scannedEnclave[x].Name)
+				ee := enclaveError{
+					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
+						t.Location()),
+					msg,
+				}
+				return ee
+			}
 		}
 	}
 	return
@@ -124,6 +207,7 @@ func IsValid() (err_ error) {
 // Reset the scannedEnclave to nil before the next run.
 func Reset() {
 	scannedEnclave = enclaveMap{}
+	scannedList = nil
 }
 
 // InfiniBin returns a path to user's infinigon 'bin' directory.

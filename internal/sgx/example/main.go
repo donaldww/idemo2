@@ -13,33 +13,28 @@ import (
 
 const scanInterval = 2
 
-func main() {
-	stop := make(chan bool)
-	start := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case <-start:
-				fmt.Println("\n  Received start signal.")
-			case <-stop:
-				fmt.Println("\n  Received stop signal.")
-				return
-			default:
-				sgx.Scan()
-				err := sgx.IsValid()
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					fmt.Println("IG17 Enclave Scan: PASSED")
-				}
-				sgx.Reset()
-				time.Sleep(scanInterval * time.Second)
-			}
+func sgxMain() {
+	for {
+		sgx.Scan()
+		err := sgx.IsValid()
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			t := time.Now()
+			fmt.Println(time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
+				t.Location()), "IG17 SGX Enclave Health: PASSED")
 		}
-	}()
+		sgx.Reset()
+		time.Sleep(scanInterval * time.Second)
+	}
+}
 
-	start <- true
+func main() {
+	// stop := make(chan bool)
+	// start := make(chan bool)
+
+	go sgxMain()
+	// start <- true
 	time.Sleep(100 * time.Second)
-	stop <- true
+	// stop <- true
 }
