@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/mum4k/termdash"
@@ -24,7 +25,7 @@ import (
 	"github.com/donaldww/idemo/internal/sgx"
 )
 
-const version = "v0.3.0"
+const version = "v0.3.1"
 
 // playType indicates how to play a gauge.
 type playType int
@@ -39,14 +40,16 @@ const numberOfMoneyBags = 21
 const consensusDelay = 1500 * time.Millisecond
 
 const loggerDelay = 2000 * time.Millisecond
-const loggerRefresh = 13
+const loggerRefresh = 14
 
 const splitPercent = 15
 
 const gaugeDelay = 1 * time.Millisecond
 const endGaugeWait = 500 * time.Millisecond
 const gaugeInterval = 1
-const maxTransactions = 2000
+
+const maxTransactions = 2100
+const randFactor = 297
 
 var waitForGauge = make(chan bool)
 
@@ -127,10 +130,17 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 	}
 }
 
+func maxTransactionsAdjust() int {
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	return r1.Intn(randFactor)
+}
+
 // playGauge continuously changes the displayed percent value on the gauge by the
 // step once every delay. Exits when the context expires.
 func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duration, pt playType) {
 	progress := 0
+	var maxTrans = maxTransactions - maxTransactionsAdjust()
 
 	ticker := time.NewTicker(delay)
 	defer ticker.Stop()
@@ -143,13 +153,14 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duratio
 					panic(err)
 				}
 			case playTypeAbsolute:
-				if err := g.Absolute(progress, maxTransactions); err != nil {
+				if err := g.Absolute(progress, maxTrans); err != nil {
 					panic(err)
 				}
 			}
 			progress += step
-			if progress > maxTransactions {
+			if progress > maxTrans {
 				progress = 0
+				maxTrans = maxTransactions - maxTransactionsAdjust()
 				waitForGauge <- true
 				time.Sleep(endGaugeWait)
 			}
