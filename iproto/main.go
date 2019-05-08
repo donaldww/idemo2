@@ -57,6 +57,7 @@ var waitForGauge = make(chan bool)
 func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
 	//TODO: Re-write write logger as a general purpose logger that receives
 	// messages using buffered channels.
+	_ = ctx
 	counter := 0
 	for {
 		sgx.Scan()
