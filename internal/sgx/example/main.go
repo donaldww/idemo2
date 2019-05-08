@@ -25,7 +25,10 @@ func main() {
 				return
 			default:
 				sgx.Scan()
-				sgx.PrintScanned()
+				// TODO: call function to compare enclave results here.
+				// sgx.PrintScanned()
+				sgx.Reset()
+
 				time.Sleep(2 * time.Second)
 
 			}
@@ -33,6 +36,6 @@ func main() {
 	}()
 
 	start <- false
-	time.Sleep(21 * time.Second)
+	time.Sleep(3 * time.Second)
 	quit <- true
 }

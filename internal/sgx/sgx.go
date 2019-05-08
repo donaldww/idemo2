@@ -23,8 +23,8 @@ type enclaveItem struct {
 	Shasum string
 }
 
-// Println prints an enclave item.
-func (e enclaveItem) Println() {
+// println prints an enclave item.
+func (e enclaveItem) println() {
 	fmt.Println(e.Path, e.Type, e.Md5, e.Shasum)
 }
 
@@ -36,9 +36,16 @@ var currentEnclave *[]enclaveItem
 func init() {
 	currentEnclave = &stableEnclave
 	Scan()
-	PrintStable()
+	// PrintStable()
 	currentEnclave = &scannedEnclave
 }
+
+// func PrintStable() {
+// 	fmt.Println("STABLE ENCLAVE")
+// 	for _, e := range stableEnclave {
+// 		e.Println()
+// 	}
+// }
 
 // Scan scans the Infinigon SGX enclave binaries.
 func Scan() {
@@ -51,22 +58,19 @@ func Scan() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 }
 
-func PrintStable() {
-	fmt.Println("STABLE ENCLAVE")
-	for _, e := range stableEnclave {
-		e.Println()
-	}
+// Reset the scannedEnclave to nil before the next run.
+func Reset() {
+	scannedEnclave = nil
 }
 
 func PrintScanned() {
 	fmt.Println("SCANNED ENCLAVE")
 	for _, x := range scannedEnclave {
-		x.Println()
+		x.println()
 	}
-	scannedEnclave = nil
+	Reset()
 }
 
 // InfiniBin returns a path to user's infinigon 'bin' directory.
@@ -85,23 +89,21 @@ func InfiniBin() (ret_ string, err_ error) {
 // walk process information about each file and directory in the SGX enclave.
 func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 	_, _ = _info, _err
+	shasum := fmt.Sprintf("%x", sha256.Sum256([]byte(_path)))
 
 	fileInfo, err := os.Stat(_path)
 	if err != nil {
 		return
 	}
-
-	shasum := fmt.Sprintf("%x", sha256.Sum256([]byte(_path)))
-
 	mode := fileInfo.Mode()
+
 	if mode.IsRegular() {
 		data, err2 := ioutil.ReadFile(_path)
 		if err2 != nil {
 			log.Panic(err2)
 		}
-		res := md5.Sum(data)
-		md5 := fmt.Sprintf("%x", res)
-		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "f", md5, shasum})
+		newMd5 := fmt.Sprintf("%x", md5.Sum(data))
+		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "f", newMd5, shasum})
 	} else if mode.IsDir() {
 		*currentEnclave = append(*currentEnclave, enclaveItem{_path, "d", "", shasum})
 	} else {
