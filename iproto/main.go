@@ -2,8 +2,7 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-// Binary textdemo displays a couple of Text widgets.
-// Exist when 'q' or 'Q' is pressed.
+// iproto runs a demostration of IG17 blockchain in operation.
 package main
 
 import (
