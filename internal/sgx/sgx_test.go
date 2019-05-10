@@ -9,6 +9,8 @@ import (
 	"math"
 	"os"
 	"testing"
+	
+	"github.com/donaldww/ig"
 )
 
 func TestPrint(t *testing.T) {
@@ -41,11 +43,7 @@ func TestInfiniBin(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, err := infiniBin()
-		if err != nil {
-			t.Errorf("Error: %s", err)
-			t.FailNow()
-		}
+		got := ig.Env("IGBIN")
 		if got != test.want {
 			t.Errorf("infiniBin: %s != %s", got, test.want)
 		}

@@ -12,8 +12,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
+	
+	"github.com/donaldww/ig"
 )
 
 // enclaveItem represents a file or directory in the enclave.
@@ -48,14 +49,10 @@ func init() {
 
 // Scan scans the Infinigon SGX enclave binaries.
 func Scan() {
-	path, err := infiniBin()
+	path := ig.Env("IGBIN")
+	err := filepath.Walk(path, walk)
 	if err != nil {
-		log.Panic(err)
-	}
-	err = filepath.Walk(path, walk)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 }
 
@@ -145,14 +142,14 @@ func IsValid() (err_ error) {
 		ee = enclaveError{
 			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
 				t.Location()),
-			"IG17-SGX enclave: System file removed",
+			"IG17-SGX ENCLAVE: File removed!",
 		}
 		return ee
 	case diff < 0:
 		ee = enclaveError{
 			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
 				t.Location()),
-			"IG17-SGX enclave: Rogue file added",
+			"IG17-SGX ENCLAVE: Rogue file added!",
 		}
 		return ee
 	default:
@@ -167,7 +164,7 @@ func checkFileStatus() (err_ error) {
 	for _, x := range scannedList {
 		if scannedEnclave[x].Type == "f" {
 			if scannedEnclave[x].Md5 != stableEnclave[x].Md5 {
-				msg := fmt.Sprintf("IG17-SGX enclave: '%s' chksum failed",
+				msg := fmt.Sprintf("IG17-SGX ENCLAVE: %s chksum failed!",
 					scannedEnclave[x].Name)
 				ee := enclaveError{
 					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
@@ -181,7 +178,7 @@ func checkFileStatus() (err_ error) {
 	for _, x := range scannedList {
 		if scannedEnclave[x].Shasum != stableEnclave[x].Shasum {
 			if scannedEnclave[x].Type == "f" {
-				msg := fmt.Sprintf("IG17-SGX enclave: name change '%s=%s'",
+				msg := fmt.Sprintf("IG17-SGX ENCLAVE: file changed from %s to %s!",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
 				ee := enclaveError{
 					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
@@ -190,7 +187,7 @@ func checkFileStatus() (err_ error) {
 				}
 				return ee
 			} else {
-				msg := fmt.Sprintf("IG17-SGX enclave: directory name change '%s=%s'",
+				msg := fmt.Sprintf("IG17-SGX ENCLAVE: directory changed from %s to %s!",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
 				ee := enclaveError{
 					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
@@ -210,15 +207,3 @@ func Reset() {
 	scannedList = nil
 }
 
-// InfiniBin returns a path to user's infinigon 'bin' directory.
-func infiniBin() (ret_ string, err_ error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	s := []string{home, ".infinigon/bin"}
-	ret_ = strings.Join(s, "/")
-	err_ = nil
-	return
-}

@@ -22,7 +22,7 @@ func sgxMain() {
 		} else {
 			t := time.Now()
 			fmt.Println(time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
-				t.Location()), "IG17 SGX Enclave Health: PASSED")
+				t.Location()), "IG17 SGX ENCLAVE: passed inspection")
 		}
 		sgx.Reset()
 		time.Sleep(scanInterval * time.Second)
@@ -30,9 +30,6 @@ func sgxMain() {
 }
 
 func main() {
-	// stop := make(chan bool)
-	// start := make(chan bool)
-
 	go sgxMain()
 	// start <- true
 	time.Sleep(100 * time.Second)

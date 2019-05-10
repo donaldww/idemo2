@@ -34,14 +34,14 @@ const (
 	playTypeAbsolute
 )
 
-const numberOfNodes = 19
+const numberOfNodes = 21
 const numberOfMoneyBags = 17
 const consensusDelay = 1500 * time.Millisecond
 
 const loggerDelay = 2000 * time.Millisecond
 
 
-const loggerRefresh = 20
+const loggerRefresh = 5
 
 const splitPercent = 15
 
@@ -75,7 +75,7 @@ func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
 				tNow.Year(), tNow.Month(), tNow.Day(), tNow.Hour(), tNow.Minute(),
 				tNow.Second(), tNow.Nanosecond(),
 				tNow.Location()),
-				"IG17-SGX enclave: No issues found!")
+				"IG17-SGX ENCLAVE: Verified.")
 		}
 		counter++
 		sgx.Reset()
