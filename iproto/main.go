@@ -24,7 +24,7 @@ import (
 	"github.com/donaldww/idemo/internal/sgx"
 )
 
-const version = "v0.3.1"
+const version = "v0.3.2"
 
 // playType indicates how to play a gauge.
 type playType int
@@ -41,7 +41,7 @@ const consensusDelay = 1500 * time.Millisecond
 const loggerDelay = 2000 * time.Millisecond
 
 
-const loggerRefresh = 5
+const loggerRefresh = 20
 
 const splitPercent = 15
 
