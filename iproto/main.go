@@ -173,7 +173,6 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duratio
 }
 
 func main() {
-
 	// termbox.New returns a 'termbox' based on
 	// the user's default terminal: Terminal or iTerm.
 	t, err := termbox.New(termbox.ColorMode(terminalapi.ColorMode256))
@@ -215,7 +214,7 @@ func main() {
 	}
 
 	// SGX Monitor Window
-	softwareMonitorWindow, err := text.New(text.WrapAtWords())
+	softwareMonitorWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
