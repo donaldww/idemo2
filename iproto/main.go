@@ -34,12 +34,14 @@ const (
 	playTypeAbsolute
 )
 
-const numberOfNodes = 23
-const numberOfMoneyBags = 21
+const numberOfNodes = 19
+const numberOfMoneyBags = 17
 const consensusDelay = 1500 * time.Millisecond
 
 const loggerDelay = 2000 * time.Millisecond
-const loggerRefresh = 14
+
+
+const loggerRefresh = 5
 
 const splitPercent = 15
 
@@ -62,7 +64,7 @@ func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
 		sgx.Scan()
 		tNow := time.Now()
 		err := sgx.IsValid()
-		if counter > loggerRefresh {
+		if counter >= loggerRefresh {
 			t.Reset()
 			counter = 0
 		}
