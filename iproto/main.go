@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/donaldww/ig"
-	"github.com/fsnotify/fsnotify"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/container"
