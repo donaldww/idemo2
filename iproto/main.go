@@ -34,27 +34,31 @@ const (
 	playTypeAbsolute
 )
 
-const numberOfNodes = 21
-const numberOfMoneyBags = 17
-const consensusDelay = 1500 * time.Millisecond
+const (
+	// Relative sizes of windows on left side of screen
+	splitPercent = 15
 
-const loggerDelay = 2000 * time.Millisecond
+	// Consensus widget
+	numberOfNodes     = 21
+	numberOfMoneyBags = 17
+	consensusDelay    = 1500 * time.Millisecond
 
+	// SGX monitor widget (logger)
+	loggerDelay   = 2000 * time.Millisecond
+	loggerRefresh = 5
 
-const loggerRefresh = 5
+	// Gauge widget
+	gaugeDelay    = 1 * time.Millisecond
+	endGaugeWait  = 500 * time.Millisecond
+	gaugeInterval = 1
 
-const splitPercent = 15
-
-const gaugeDelay = 1 * time.Millisecond
-const endGaugeWait = 500 * time.Millisecond
-const gaugeInterval = 1
-
-const maxTransactions = 2100
-const randFactor = 297
+	maxTransactions = 2100
+	randFactor      = 297
+)
 
 var waitForGauge = make(chan bool)
 
-// writeLogger logs messages into the SGW monitor widget.
+// writeLogger logs messages into the SGX monitor widget.
 func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
 	//TODO: Re-write write logger as a general purpose logger that receives
 	// messages using buffered channels.
@@ -298,13 +302,10 @@ func main() {
 // writeColorf adds terminal Color and Sprintf parameters to the Write method.
 //
 // Params:
-//  _color: a cell.Color, such as cell.ColorRed, cell.ColorDefault, ... [termdash/cell/color.go]
-//  _text: a Printf/Sprintf-style format string
-//  _args: an optional list of comma-separated arguments (varags)
+//  color: a cell.Color, such as cell.ColorRed, cell.ColorDefault, ... [termdash/cell/color.go]
+//  format: a Printf/Sprintf-style format string
+//  args: an optional list of comma-separated arguments (varags)
 //
-// Returns:
-//  err_: error returned by Write
-func writeColorf(t *text.Text, _color cell.Color, _text string, _args ...interface{}) (err_ error) {
-	err_ = t.Write(fmt.Sprintf(_text, _args...), text.WriteCellOpts(cell.FgColor(_color)))
-	return
+func writeColorf(t *text.Text, color cell.Color, format string, args ...interface{}) {
+	_ = t.Write(fmt.Sprintf(format, args...), text.WriteCellOpts(cell.FgColor(color)))
 }
