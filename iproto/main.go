@@ -11,6 +11,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/donaldww/ig"
+	"github.com/fsnotify/fsnotify"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/container"
@@ -24,7 +26,7 @@ import (
 	"github.com/donaldww/idemo/internal/sgx"
 )
 
-const version = "v0.3.2"
+const version = "v0.3.3"
 
 // playType indicates how to play a gauge.
 type playType int
@@ -34,29 +36,30 @@ const (
 	playTypeAbsolute
 )
 
-const (
+var c = ig.NewConfig("iproto_config")
+
+var (
 	// Relative sizes of windows on left side of screen
-	splitPercent = 15
+	splitPercent = c.GetInt("splitPercent")
 
 	// Consensus widget
-	numberOfNodes     = 21
-	numberOfMoneyBags = 17
-	consensusDelay    = 1500 * time.Millisecond
+	numberOfNodes     = c.GetInt("numberOfNodes")
+	numberOfMoneyBags = c.GetInt("numberOfMoneyBags")
+	consensusDelay    = c.GetMilliseconds("consensusDelay")
 
 	// SGX monitor widget (logger)
-	loggerDelay   = 2000 * time.Millisecond
-	loggerRefresh = 5
+	loggerDelay   = c.GetMilliseconds("loggerDelay")
+	loggerRefresh = c.GetInt("loggerRefresh")
 
 	// Gauge widget
-	gaugeDelay    = 1 * time.Millisecond
-	endGaugeWait  = 500 * time.Millisecond
-	gaugeInterval = 1
+	gaugeDelay    = c.GetMilliseconds("gaugeDelay")
+	endGaugeWait  = c.GetMilliseconds("endGaugeWait")
+	gaugeInterval = c.GetInt("gaugeInterval")
 
-	maxTransactions = 2100
-	randFactor      = 297
+	maxTransactions = c.GetInt("maxTransactions")
+	randFactor      = c.GetInt("randFactor")
+	waitForGauge    = make(chan bool)
 )
-
-var waitForGauge = make(chan bool)
 
 // writeLogger logs messages into the SGX monitor widget.
 func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {

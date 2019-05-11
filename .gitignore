@@ -17,6 +17,7 @@
 /scratches/gencon/gencon
 /scratches/termdash/termdash
 /iproto/iproto*
+!/iproto/iproto_config.toml
 .Ulysses-Group.plist
 ||||||| merged common ancestors
 /testapps/box/box
