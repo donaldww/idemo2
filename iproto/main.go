@@ -35,33 +35,33 @@ const (
 )
 
 var (
-	c            = ig.NewConfig("iproto_config")
+	config       = ig.NewConfig("iproto_config")
 	waitForGauge = make(chan bool)
 )
 
 var (
 	// Relative sizes of windows
-	splitPercentLeft     = c.GetInt("splitPercentLeft")
-	splitPercentRight    = c.GetInt("splitPercentRight")
-	splitPercentVertical = c.GetInt("splitPercentVertical")
+	splitPercentLeft     = config.GetInt("splitPercentLeft")
+	splitPercentRight    = config.GetInt("splitPercentRight")
+	splitPercentVertical = config.GetInt("splitPercentVertical")
 
 	// Consensus widget
-	numberOfNodes     = c.GetInt("numberOfNodes")
-	numberOfMoneyBags = c.GetInt("numberOfMoneyBags")
-	consensusDelay    = c.GetMilliseconds("consensusDelay")
-	moneyBagsDelay    = c.GetMilliseconds("moneyBagsDelay")
+	numberOfNodes     = config.GetInt("numberOfNodes")
+	numberOfMoneyBags = config.GetInt("numberOfMoneyBags")
+	consensusDelay    = config.GetMilliseconds("consensusDelay")
+	moneyBagsDelay    = config.GetMilliseconds("moneyBagsDelay")
 
 	// SGX monitor widget (logger)
-	loggerDelay   = c.GetMilliseconds("loggerDelay")
-	loggerRefresh = c.GetInt("loggerRefresh")
+	loggerDelay   = config.GetMilliseconds("loggerDelay")
+	loggerRefresh = config.GetInt("loggerRefresh")
 
 	// Gauge widget
-	gaugeDelay    = c.GetMilliseconds("gaugeDelay")
-	endGaugeWait  = c.GetMilliseconds("endGaugeWait")
-	gaugeInterval = c.GetInt("gaugeInterval")
+	gaugeDelay    = config.GetMilliseconds("gaugeDelay")
+	endGaugeWait  = config.GetMilliseconds("endGaugeWait")
+	gaugeInterval = config.GetInt("gaugeInterval")
 
-	maxTransactions = c.GetInt("maxTransactions")
-	randFactor      = c.GetInt("randFactor")
+	maxTransactions = config.GetInt("maxTransactions")
+	randFactor      = config.GetInt("randFactor")
 )
 
 //TODO: Implement auto-load function for config file values.

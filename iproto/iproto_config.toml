@@ -8,7 +8,7 @@
 
 # SGX monitor widget (logger)
 	loggerDelay   = 2000 # milliseconds
-	loggerRefresh = 5
+	loggerRefresh = 1
 
 #	Gauge widget
 	gaugeDelay    = 1 # millisecond
@@ -26,4 +26,4 @@
 	splitPercentRight = 70
 
 # Relative size left vs. right side of screen
-	splitPercentVertical = 50
+	splitPercentVertical = 35

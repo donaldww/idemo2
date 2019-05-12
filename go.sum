@@ -8,6 +8,10 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/donaldww/ig v0.0.0-20190511125509-b65592d27acf h1:4Q3rCIAf0EDXTkvN8dKBBHS/up8qC3Yh3JYAj+Cri2k=
 github.com/donaldww/ig v0.0.0-20190511125509-b65592d27acf/go.mod h1:XV5hg60UDiM+FqIFAeVODg6LZUO2pB7gQQtFH2RVvYg=
+github.com/donaldww/ig v0.0.0-20190512134708-597e6d5b9f24 h1:YcH0NvHSZGttrxN6LDUlb3omHVf/HqFDTIlX9PMW94I=
+github.com/donaldww/ig v0.0.0-20190512134708-597e6d5b9f24/go.mod h1:XV5hg60UDiM+FqIFAeVODg6LZUO2pB7gQQtFH2RVvYg=
+github.com/donaldww/ig v0.0.0-20190512140457-77d1aef383cf h1:4h7gXAw1dfc9rhSd+r/MQb/v6eFJS09E+/ihuFQ8oHI=
+github.com/donaldww/ig v0.0.0-20190512140457-77d1aef383cf/go.mod h1:XV5hg60UDiM+FqIFAeVODg6LZUO2pB7gQQtFH2RVvYg=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
