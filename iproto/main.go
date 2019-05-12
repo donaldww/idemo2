@@ -66,11 +66,11 @@ var (
 
 //TODO: Implement auto-load function for config file values.
 //TODO: Add pre-consensus check into the remaining two windows.
+//TODO: Re-write writeLogger as a general purpose logger that receives
+// messages using buffered channels.
 
 // writeLogger logs messages into the SGX monitor widget.
 func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
-	// TODO: Re-write writeLogger as a general purpose logger that receives
-	//  messages using buffered channels.
 	_ = ctx
 	counter := 0
 	for {
