@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-	
+
 	"github.com/donaldww/ig"
 )
 
@@ -27,6 +27,9 @@ type enclaveItem struct {
 }
 
 type enclaveMap map[string]enclaveItem
+
+//TODO: Rewrite this module so that the enclave is a map
+// with scan being a method.
 
 var stableEnclave = enclaveMap{}
 var stableList []string = nil
@@ -206,4 +209,3 @@ func Reset() {
 	scannedEnclave = enclaveMap{}
 	scannedList = nil
 }
-
