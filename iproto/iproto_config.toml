@@ -8,7 +8,7 @@
 
 # SGX monitor widget (logger)
 	loggerDelay   = 2000 # milliseconds
-	loggerRefresh = 3
+	loggerRefresh = 5
 
 #	Gauge widget
 	gaugeDelay    = 1 # millisecond
@@ -16,10 +16,14 @@
 	gaugeInterval = 1
 
 # Parameters for generating transactions for gauge widget
-	maxTransactions = 2300
-	randFactor      = 597
+	maxTransactions = 2100
+	randFactor      = 297
 
-# Relative size of gauge window vs. consensus window
+# Left side: Relative size of gauge vs. consensus windows
 	splitPercentLeft = 15
+
+	# Right side: relative size of top 2 vs. bottom
 	splitPercentRight = 70
+
+# Relative size left vs. right side of screen
 	splitPercentVertical = 50
