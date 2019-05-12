@@ -125,56 +125,42 @@ func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 
 // EnclaveError is used to express enclave errors.
 type enclaveError struct {
-	When time.Time
 	What string
 }
 
 func (e enclaveError) Error() string {
-	return fmt.Sprintf("%v: %v", e.When, e.What)
+	t := time.Now()
+	err := fmt.Sprintf("%v: %v", time.Date(
+		t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
+		t.Location()),
+		e.What)
+	return err
 }
 
 // IsValid determines if a scanned directory matches a valid one.
 func IsValid() (err_ error) {
 	err_ = nil
-	ee := enclaveError{time.Time{}, ""}
 	diff := len(stableEnclave) - len(scannedEnclave)
-	t := time.Now()
-
 	switch {
 	case diff > 0:
-		ee = enclaveError{
-			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
-				t.Location()),
-			"IG17-SGX ENCLAVE: File removed!",
-		}
-		return ee
+		return enclaveError{"IG17-SGX ENCLAVE: File removed!"}
 	case diff < 0:
-		ee = enclaveError{
-			time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
-				t.Location()),
-			"IG17-SGX ENCLAVE: Rogue file added!",
-		}
-		return ee
+		return enclaveError{"IG17-SGX ENCLAVE: Rogue file added!"}
 	default:
 		return checkFileStatus()
 	}
-	return
 }
 
 func checkFileStatus() (err_ error) {
 	err_ = nil
-	t := time.Now()
 	for _, x := range scannedList {
 		if scannedEnclave[x].Type == "f" {
 			if scannedEnclave[x].Md5 != stableEnclave[x].Md5 {
 				msg := fmt.Sprintf("IG17-SGX ENCLAVE: %s chksum failed!",
 					scannedEnclave[x].Name)
-				ee := enclaveError{
-					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
-						t.Location()),
-					msg,
-				}
-				return ee
+				return enclaveError{msg}
+
 			}
 		}
 	}
@@ -183,21 +169,11 @@ func checkFileStatus() (err_ error) {
 			if scannedEnclave[x].Type == "f" {
 				msg := fmt.Sprintf("IG17-SGX ENCLAVE: file changed from %s to %s!",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
-				ee := enclaveError{
-					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
-						t.Location()),
-					msg,
-				}
-				return ee
+				return enclaveError{msg}
 			} else {
 				msg := fmt.Sprintf("IG17-SGX ENCLAVE: directory changed from %s to %s!",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
-				ee := enclaveError{
-					time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
-						t.Location()),
-					msg,
-				}
-				return ee
+				return enclaveError{msg}
 			}
 		}
 	}
