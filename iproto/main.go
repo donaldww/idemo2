@@ -38,8 +38,9 @@ const (
 var c = ig.NewConfig("iproto_config")
 
 var (
-	// Relative sizes of windows on left side of screen
-	splitPercent = c.GetInt("splitPercent")
+	// Relative sizes of windows
+	splitPercentLeft  = c.GetInt("splitPercentLeft")
+	splitPercentRight = c.GetInt("getSplitPercentRight")
 
 	// Consensus widget
 	numberOfNodes     = c.GetInt("numberOfNodes")
@@ -60,10 +61,13 @@ var (
 	waitForGauge    = make(chan bool)
 )
 
+//TODO: Implement auto-load function for config file values.
+//TODO: Add pre-consensus check into the remaining two windows.
+
 // writeLogger logs messages into the SGX monitor widget.
 func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
-	//TODO: Re-write write logger as a general purpose logger that receives
-	// messages using buffered channels.
+	// TODO: Re-write writeLogger as a general purpose logger that receives
+	//  messages using buffered channels.
 	_ = ctx
 	counter := 0
 	for {
@@ -245,7 +249,7 @@ func main() {
 						container.BorderTitle(" IG17 Consensus Group Randomizer "),
 						container.PlaceWidget(consensusWindow),
 					),
-					container.SplitPercent(splitPercent),
+					container.SplitPercent(splitPercentLeft),
 				),
 			),
 
@@ -270,6 +274,7 @@ func main() {
 						container.BorderTitle(" SGX Security Monitor "),
 						container.PlaceWidget(softwareMonitorWindow),
 					), // Bottom
+					container.SplitPercent(splitPercentRight),
 				),
 			), // Right
 		), // SplitVertical

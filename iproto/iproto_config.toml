@@ -19,4 +19,5 @@
 	randFactor      = 297
 
 # Relative size of gauge window vs. consensus window
-	splitPercent = 15
+	splitPercentLeft = 15
+	splitPercentRight = 70
