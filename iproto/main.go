@@ -40,7 +40,7 @@ var c = ig.NewConfig("iproto_config")
 var (
 	// Relative sizes of windows
 	splitPercentLeft  = c.GetInt("splitPercentLeft")
-	splitPercentRight = c.GetInt("getSplitPercentRight")
+	splitPercentRight = c.GetInt("splitPercentRight")
 
 	// Consensus widget
 	numberOfNodes     = c.GetInt("numberOfNodes")
