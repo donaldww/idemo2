@@ -13,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
+	
 	"github.com/donaldww/ig"
 )
 
@@ -28,15 +28,15 @@ type enclaveItem struct {
 
 type enclaveMap map[string]enclaveItem
 
-//TODO: Rewrite this module so that the enclave is a map
-// with scan being a method.
+// This is the enclave that is scanned every time.
+var scannedEnclave = enclaveMap{}
+var scannedList []string = nil
 
+// This is a copy of the first scanned enclave.
 var stableEnclave = enclaveMap{}
 var stableList []string = nil
 
-var scannedEnclave = enclaveMap{}
-var scannedList []string = nil
-var oneTime = true
+// var oneTime = true
 
 // println prints an enclave item.
 func (e enclaveItem) println() {
@@ -45,9 +45,13 @@ func (e enclaveItem) println() {
 
 // Get the state of the enclave when the program starts.
 func init() {
-	oneTime = true
 	Scan()
-	oneTime = false
+	// This copy only happens once.
+	for k, v := range scannedEnclave {
+		stableEnclave[k] = v
+		stableList = append(stableList,
+			scannedEnclave[k].Name + "." + scannedEnclave[k].Type)
+	}
 }
 
 // Scan scans the Infinigon SGX enclave binaries.
@@ -82,37 +86,19 @@ func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
 			return fmt.Sprintf("%x", md5.Sum(data))
 		}(_path)
 		name += ".f"
-		if oneTime {
-			stableEnclave[name] =
-				enclaveItem{Name: plainName, Path: _path, Type: "f", Md5: newMd5, Shasum: shasum}
-			stableList = append(stableList, name)
-		} else {
-			scannedEnclave[name] =
-				enclaveItem{Name: plainName, Path: _path, Type: "f", Md5: newMd5, Shasum: shasum}
-			scannedList = append(scannedList, name)
-		}
+		scannedEnclave[name] =
+			enclaveItem{Name: plainName, Path: _path, Type: "f", Md5: newMd5, Shasum: shasum}
+		scannedList = append(scannedList, name)
 	case mode.IsDir():
 		name += ".d"
-		if oneTime {
-			stableEnclave[name] =
-				enclaveItem{Name: plainName, Path: _path, Type: "d", Md5: "", Shasum: shasum}
-			stableList = append(stableList, name)
-		} else {
-			scannedEnclave[name] =
-				enclaveItem{Name: plainName, Path: _path, Type: "d", Md5: "", Shasum: shasum}
-			scannedList = append(scannedList, name)
-		}
+		scannedEnclave[name] =
+			enclaveItem{Name: plainName, Path: _path, Type: "d", Md5: "", Shasum: shasum}
+		scannedList = append(scannedList, name)
 	default:
 		name += ".u"
-		if oneTime {
-			stableEnclave[name] =
-				enclaveItem{Name: plainName, Path: _path, Type: "u", Md5: "", Shasum: shasum}
-			stableList = append(stableList, name)
-		} else {
-			scannedEnclave[name] =
-				enclaveItem{Name: plainName, Path: _path, Type: "u", Md5: "", Shasum: shasum}
-			scannedList = append(scannedList, name)
-		}
+		scannedEnclave[name] =
+			enclaveItem{Name: plainName, Path: _path, Type: "u", Md5: "", Shasum: shasum}
+		scannedList = append(scannedList, name)
 	}
 
 	err_ = nil

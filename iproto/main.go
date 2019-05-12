@@ -29,7 +29,7 @@ import (
 type playType int
 
 const (
-	version                  = "v0.3.3"
+	version                  = "v0.4.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )

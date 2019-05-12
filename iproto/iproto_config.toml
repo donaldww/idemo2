@@ -26,4 +26,4 @@
 	splitPercentRight = 70
 
 # Relative size left vs. right side of screen
-	splitPercentVertical = 35
+	splitPercentVertical = 45
