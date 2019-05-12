@@ -1,13 +1,14 @@
 # Config file for iproto
 
 # Consensus widget
-	numberOfNodes = 21
+	numberOfNodes = 19
 	numberOfMoneyBags = 17
 	consensusDelay = 1500 # milliseconds
+	moneyBagsDelay = 40 # milliseconds
 
 # SGX monitor widget (logger)
 	loggerDelay   = 2000 # milliseconds
-	loggerRefresh = 10
+	loggerRefresh = 3
 
 #	Gauge widget
 	gaugeDelay    = 1 # millisecond
@@ -15,9 +16,10 @@
 	gaugeInterval = 1
 
 # Parameters for generating transactions for gauge widget
-	maxTransactions = 2100
-	randFactor      = 297
+	maxTransactions = 2300
+	randFactor      = 597
 
 # Relative size of gauge window vs. consensus window
 	splitPercentLeft = 15
 	splitPercentRight = 70
+	splitPercentVertical = 50

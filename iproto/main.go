@@ -25,27 +25,31 @@ import (
 	"github.com/donaldww/idemo/internal/sgx"
 )
 
-const version = "v0.3.3"
-
 // playType indicates how to play a gauge.
 type playType int
 
 const (
+	version                  = "v0.3.3"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
 
-var c = ig.NewConfig("iproto_config")
+var (
+	c            = ig.NewConfig("iproto_config")
+	waitForGauge = make(chan bool)
+)
 
 var (
 	// Relative sizes of windows
-	splitPercentLeft  = c.GetInt("splitPercentLeft")
-	splitPercentRight = c.GetInt("splitPercentRight")
+	splitPercentLeft     = c.GetInt("splitPercentLeft")
+	splitPercentRight    = c.GetInt("splitPercentRight")
+	splitPercentVertical = c.GetInt("splitPercentVertical")
 
 	// Consensus widget
 	numberOfNodes     = c.GetInt("numberOfNodes")
 	numberOfMoneyBags = c.GetInt("numberOfMoneyBags")
 	consensusDelay    = c.GetMilliseconds("consensusDelay")
+	moneyBagsDelay    = c.GetMilliseconds("moneyBagsDelay")
 
 	// SGX monitor widget (logger)
 	loggerDelay   = c.GetMilliseconds("loggerDelay")
@@ -58,7 +62,6 @@ var (
 
 	maxTransactions = c.GetInt("maxTransactions")
 	randFactor      = c.GetInt("randFactor")
-	waitForGauge    = make(chan bool)
 )
 
 //TODO: Implement auto-load function for config file values.
@@ -137,7 +140,8 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 
 		for i := 0; i < numberOfMoneyBags; i++ {
 			writeColorf(t, cell.ColorRed, "💰")
-			time.Sleep(40 * time.Millisecond)
+			time.Sleep(moneyBagsDelay)
+			// time.Sleep(40 * time.Millisecond)
 		}
 	}
 }
@@ -277,6 +281,7 @@ func main() {
 					container.SplitPercent(splitPercentRight),
 				),
 			), // Right
+			container.SplitPercent(splitPercentVertical),
 		), // SplitVertical
 	)
 	if err != nil {
