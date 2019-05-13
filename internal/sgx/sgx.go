@@ -7,13 +7,14 @@ package sgx
 import (
 	"crypto/md5"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
-	
+
 	"github.com/donaldww/ig"
 )
 
@@ -50,7 +51,7 @@ func init() {
 	for k, v := range scannedEnclave {
 		stableEnclave[k] = v
 		stableList = append(stableList,
-			scannedEnclave[k].Name + "." + scannedEnclave[k].Type)
+			scannedEnclave[k].Name+"."+scannedEnclave[k].Type)
 	}
 }
 
@@ -64,45 +65,51 @@ func Scan() {
 }
 
 // walk process information about each file and directory in the SGX enclave.
-func walk(_path string, _info os.FileInfo, _err error) (err_ error) {
-	_, _ = _info, _err
-	shasum := fmt.Sprintf("%x", sha256.Sum256([]byte(_path)))
-
-	fileInfo, err := os.Stat(_path)
+func walk(path string, _ os.FileInfo, _ error) error {
+	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return
+		return err
 	}
 	mode := fileInfo.Mode()
 	name := fileInfo.Name()
-	plainName := name
 
 	switch {
 	case mode.IsRegular():
-		newMd5 := func(p string) string {
-			data, err2 := ioutil.ReadFile(p)
-			if err2 != nil {
-				log.Panic(err2)
-			}
-			return fmt.Sprintf("%x", md5.Sum(data))
-		}(_path)
-		name += ".f"
-		scannedEnclave[name] =
-			enclaveItem{Name: plainName, Path: _path, Type: "f", Md5: newMd5, Shasum: shasum}
-		scannedList = append(scannedList, name)
+		key := name + ".f"
+		scannedEnclave[key] =
+			enclaveItem{Name: name, Path: path, Type: "f", Md5: getMd5(path), Shasum: getShaSum(path)}
+		scannedList = append(scannedList, key)
 	case mode.IsDir():
-		name += ".d"
-		scannedEnclave[name] =
-			enclaveItem{Name: plainName, Path: _path, Type: "d", Md5: "", Shasum: shasum}
-		scannedList = append(scannedList, name)
+		key := name + ".d"
+		scannedEnclave[key] =
+			enclaveItem{Name: name, Path: path, Type: "d", Md5: "", Shasum: getShaSum(path)}
+		scannedList = append(scannedList, key)
 	default:
-		name += ".u"
-		scannedEnclave[name] =
-			enclaveItem{Name: plainName, Path: _path, Type: "u", Md5: "", Shasum: shasum}
-		scannedList = append(scannedList, name)
+		key := name + ".u"
+		scannedEnclave[key] =
+			enclaveItem{Name: name, Path: path, Type: "u", Md5: "", Shasum: getShaSum(path)}
+		scannedList = append(scannedList, key)
 	}
 
-	err_ = nil
-	return
+	return nil
+}
+
+// getMd5 returns the md5 encoding of a string, in hex.
+func getMd5(aString string) string {
+	data, err := ioutil.ReadFile(aString)
+	if err != nil {
+		log.Panic(err)
+	}
+	m := md5.New()
+	m.Write([]byte(data))
+	return hex.EncodeToString(m.Sum(nil))
+}
+
+// getShaSum returns the sha256 encoding of a string, in hex.
+func getShaSum(aString string) string {
+	h := sha256.New()
+	h.Write([]byte(aString))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 /*************
@@ -138,15 +145,13 @@ func IsValid() (err_ error) {
 	}
 }
 
-func checkFileStatus() (err_ error) {
-	err_ = nil
+func checkFileStatus() error {
 	for _, x := range scannedList {
 		if scannedEnclave[x].Type == "f" {
 			if scannedEnclave[x].Md5 != stableEnclave[x].Md5 {
 				msg := fmt.Sprintf("IG17-SGX ENCLAVE: %s chksum failed!",
 					scannedEnclave[x].Name)
 				return enclaveError{msg}
-
 			}
 		}
 	}
@@ -163,7 +168,7 @@ func checkFileStatus() (err_ error) {
 			}
 		}
 	}
-	return
+	return nil
 }
 
 // Reset the scannedEnclave to nil before the next run.
