@@ -1,22 +1,4 @@
 # Unignore all directories.
-!*/
-
-# Hidden Files
-.DS_Store
-.Ulysses-Group.plist
-
-# Ignore files with these extensions.
-*.pdf
-*.jpg
-*.png
-
-# Ignore some hidden directories.
-.idea/
-
-# Ignore all binary versions of iproto*
-/iproto/iproto*
-# but include any iproto*.toml files.
-!*.toml
-
-# Ingore compiled example programs.
-/**/example/example
+*
+!*.*
+!**/
