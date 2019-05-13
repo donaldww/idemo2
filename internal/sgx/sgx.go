@@ -37,8 +37,6 @@ var scannedList []string = nil
 var stableEnclave = enclaveMap{}
 var stableList []string = nil
 
-// var oneTime = true
-
 // println prints an enclave item.
 func (e enclaveItem) println() {
 	fmt.Println(e.Type, e.Md5, e.Shasum)
