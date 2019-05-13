@@ -70,8 +70,7 @@ var (
 // messages using buffered channels.
 
 // writeLogger logs messages into the SGX monitor widget.
-func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
-	_ = ctx
+func writeLogger(_ context.Context, t *text.Text, delay_ time.Duration) {
 	counter := 0
 	for {
 		sgx.Scan()
@@ -97,17 +96,18 @@ func writeLogger(ctx context.Context, t *text.Text, delay_ time.Duration) {
 }
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
-func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
-	consensusCounter := 0
-	leader := ""
-	_ = delay
+func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
+	var (
+		ctr = 0
+		ldr = ""
+	)
 
 	for {
 		t.Reset()
-		consensusCounter++
+		ctr++
 
 		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
-		writeColorf(t, cell.ColorRed, "%d\n\n", consensusCounter)
+		writeColorf(t, cell.ColorRed, "%d\n\n", ctr)
 
 		select {
 		default:
@@ -115,11 +115,11 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 			for _, x := range *nodes {
 				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
-					leader = x.Node
+					ldr = x.Node
 				}
-				err2 := t.Write(format)
-				if err2 != nil {
-					panic(err2)
+				err := t.Write(format)
+				if err != nil {
+					panic(err)
 				}
 			}
 		case <-ctx.Done():
@@ -127,7 +127,7 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 		}
 
 		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
-		writeColorf(t, cell.ColorRed, "%s\n", leader)
+		writeColorf(t, cell.ColorRed, "%s\n", ldr)
 
 		select {
 		case <-waitForGauge:
@@ -135,13 +135,12 @@ func writeConsensus(ctx context.Context, t *text.Text, delay time.Duration) {
 		}
 
 		writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
-		writeColorf(t, cell.ColorRed, "%d ", consensusCounter)
+		writeColorf(t, cell.ColorRed, "%d ", ctr)
 		writeColorf(t, cell.ColorRed, "--> ")
 
 		for i := 0; i < numberOfMoneyBags; i++ {
 			writeColorf(t, cell.ColorRed, "💰")
 			time.Sleep(moneyBagsDelay)
-			// time.Sleep(40 * time.Millisecond)
 		}
 	}
 }
@@ -155,8 +154,8 @@ func maxTransactionsAdjust() int {
 // playGauge continuously changes the displayed percent value on the gauge by the
 // step once every delay. Exits when the context expires.
 func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duration, pt playType) {
-	progress := 0
-	var maxTrans = maxTransactions - maxTransactionsAdjust()
+	prog := 0
+	var maxT = maxTransactions - maxTransactionsAdjust()
 
 	ticker := time.NewTicker(delay)
 	defer ticker.Stop()
@@ -165,18 +164,18 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duratio
 		case <-ticker.C: // The delay.
 			switch pt {
 			case playTypePercent:
-				if err := g.Percent(progress); err != nil {
+				if err := g.Percent(prog); err != nil {
 					panic(err)
 				}
 			case playTypeAbsolute:
-				if err := g.Absolute(progress, maxTrans); err != nil {
+				if err := g.Absolute(prog, maxT); err != nil {
 					panic(err)
 				}
 			}
-			progress += step
-			if progress > maxTrans {
-				progress = 0
-				maxTrans = maxTransactions - maxTransactionsAdjust()
+			prog += step
+			if prog > maxT {
+				prog = 0
+				maxT = maxTransactions - maxTransactionsAdjust()
 				waitForGauge <- true
 				time.Sleep(endGaugeWait)
 			}
@@ -187,6 +186,8 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duratio
 }
 
 func main() {
+	var err error
+
 	// termbox.New returns a 'termbox' based on
 	// the user's default terminal: Terminal or iTerm.
 	t, err := termbox.New(termbox.ColorMode(terminalapi.ColorMode256))
@@ -306,8 +307,8 @@ func main() {
 		}
 	}
 
-	if err2 := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); err2 != nil {
-		panic(err2)
+	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); thisErr != nil {
+		panic(thisErr)
 	}
 }
 
