@@ -18,6 +18,7 @@ package main
 import (
 	"context"
 	"time"
+	"unicode"
 
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/align"
@@ -30,6 +31,14 @@ import (
 	"github.com/mum4k/termdash/widgets/textinput"
 )
 
+const (
+	buttonHeight = 1
+)
+
+// func isValidInput(r rune) bool {
+// 	return unicode.IsDigit(r)
+// }
+
 func main() {
 	t, err := termbox.New()
 	if err != nil {
@@ -41,23 +50,21 @@ func main() {
 
 	// The input field.
 	input, err := textinput.New(
-		textinput.Label("New text: ", cell.FgColor(cell.ColorBlue)),
+		textinput.Label("Amount: ", cell.FgColor(cell.ColorBlue)),
 		textinput.MaxWidthCells(20),
-		// textinput.Border(linestyle.Light),
-		textinput.PlaceHolder("Enter any text"),
+		textinput.Filter(unicode.IsDigit),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	//
-	// :Section - The Buttons
-	//
+	// The Buttons.
 	submitB, err := button.New("Submit", func() error {
 		//TODO: add submit action here
 		// updateText <- input.ReadAndClear()
 		return nil
 	},
+		button.Height(buttonHeight),
 		button.GlobalKey(keyboard.KeyEnter),
 		button.FillColor(cell.ColorNumber(220)),
 	)
@@ -68,6 +75,7 @@ func main() {
 		// updateText <- ""
 		return nil
 	},
+		button.Height(buttonHeight),
 		button.WidthFor("Submit"),
 		button.FillColor(cell.ColorNumber(220)),
 	)
@@ -76,10 +84,12 @@ func main() {
 		cancel()
 		return nil
 	},
+		button.Height(buttonHeight),
 		button.WidthFor("Submit"),
 		button.FillColor(cell.ColorNumber(196)),
 	)
 
+	// Make the grid.
 	builder := grid.New()
 
 	builder.Add(
@@ -121,17 +131,18 @@ func main() {
 		),
 	)
 
+	// Grid is added to the container here.
 	gridOpts, err := builder.Build()
 	if err != nil {
 		panic(err)
 	}
 
-	// Grid is added to the
 	c, err := container.New(t, gridOpts...)
 	if err != nil {
 		panic(err)
 	}
 
+	// Run.
 	i := termdash.RedrawInterval(500 * time.Millisecond)
 	if thisErr := termdash.Run(ctx, t, c, i); thisErr != nil {
 		panic(thisErr)
