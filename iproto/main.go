@@ -10,16 +10,20 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+	"unicode"
 
 	"github.com/donaldww/ig"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/container"
+	"github.com/mum4k/termdash/keyboard"
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/termbox"
 	"github.com/mum4k/termdash/terminal/terminalapi"
+	"github.com/mum4k/termdash/widgets/button"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
+	"github.com/mum4k/termdash/widgets/textinput"
 
 	"github.com/donaldww/idemo/internal/consensus"
 	"github.com/donaldww/idemo/internal/sgx"
@@ -33,6 +37,8 @@ const (
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
+
+const buttonHeight = 1
 
 var (
 	config       = ig.NewConfig("iproto_config")
@@ -200,6 +206,47 @@ func main() {
 	// Returns a context and cancel function.
 	ctx, cancel := context.WithCancel(context.Background())
 
+	// The input field.
+	input, err := textinput.New(
+		textinput.Label(" Amount: ", cell.FgColor(cell.ColorBlue)),
+		textinput.MaxWidthCells(20),
+		textinput.Filter(unicode.IsDigit),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// The Buttons.
+	submitB, err := button.New("Submit", func() error {
+		//TODO: add submit action here
+		// updateText <- input.ReadAndClear()
+		return nil
+	},
+		button.Height(buttonHeight),
+		button.GlobalKey(keyboard.KeyEnter),
+		button.FillColor(cell.ColorNumber(220)),
+	)
+
+	// clearB, err := button.New("Clear", func() error {
+	// 	input.ReadAndClear()
+	// 	//TODO: what does the clear button do?
+	// 	// updateText <- ""
+	// 	return nil
+	// },
+	// 	button.Height(buttonHeight),
+	// 	button.WidthFor("Submit"),
+	// 	button.FillColor(cell.ColorNumber(220)),
+	// )
+
+	quitB, err := button.New("Quit", func() error {
+		cancel()
+		return nil
+	},
+		button.Height(buttonHeight),
+		button.WidthFor("Submit"),
+		button.FillColor(cell.ColorNumber(196)),
+	)
+
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
@@ -213,12 +260,6 @@ func main() {
 		gauge.Border(linestyle.Light),
 		gauge.BorderTitle(" Processing Infinicoin Transactions "),
 	)
-	if err != nil {
-		panic(err)
-	}
-
-	// Pre Consensus Transaction Monitor
-	preConsensusWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
@@ -245,6 +286,7 @@ func main() {
 		container.BorderColor(cell.ColorDefault),
 		container.BorderTitle(title),
 		container.SplitVertical(
+
 			// Left Container.
 			container.Left(
 				container.SplitHorizontal(
@@ -259,7 +301,7 @@ func main() {
 					container.SplitPercent(splitPercentLeft),
 				),
 			),
-
+			//
 			// Right Container.
 			container.Right(
 				container.SplitHorizontal(
@@ -268,7 +310,28 @@ func main() {
 							container.Top(
 								container.Border(linestyle.Light),
 								container.BorderTitle(" Pre Consensus Transaction  Monitor "),
-								container.PlaceWidget(preConsensusWindow),
+								container.SplitVertical(
+
+									container.Left(
+										container.PlaceWidget(input),
+									),
+
+									container.Right(
+										container.SplitVertical(
+
+											container.Left(
+												container.PlaceWidget(submitB),
+											),
+
+											container.Right(
+												container.PlaceWidget(quitB),
+											),
+										),
+									),
+									container.SplitPercent(33),
+								),
+
+								// container.PlaceWidget(preConsensusWindow),
 							),
 							container.Bottom(container.Border(linestyle.Light),
 								container.BorderTitle(" Block Creation Monitor "),
