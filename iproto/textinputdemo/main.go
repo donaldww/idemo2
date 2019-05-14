@@ -28,7 +28,6 @@ import (
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/termbox"
 	"github.com/mum4k/termdash/widgets/button"
-	"github.com/mum4k/termdash/widgets/segmentdisplay"
 	"github.com/mum4k/termdash/widgets/textinput"
 )
 
@@ -37,77 +36,77 @@ import (
 //   inputs[0] -> inputs[len(inputs)-1]
 //   inputs[1] -> inputs[0]
 // And so on.
-func rotate(inputs []rune, step int) []rune {
-	return append(inputs[step:], inputs[:step]...)
-}
+// func rotate(inputs []rune, step int) []rune {
+// 	return append(inputs[step:], inputs[:step]...)
+// }
 
 // textState creates a rotated state for the text we are displaying.
-func textState(text string, capacity, step int) []rune {
-	if capacity == 0 {
-		return nil
-	}
-
-	var state []rune
-	for i := 0; i < capacity; i++ {
-		state = append(state, ' ')
-	}
-	state = append(state, []rune(text)...)
-	step = step % len(state)
-	return rotate(state, step)
-}
+// func textState(text string, capacity, step int) []rune {
+// 	if capacity == 0 {
+// 		return nil
+// 	}
+//
+// 	var state []rune
+// 	for i := 0; i < capacity; i++ {
+// 		state = append(state, ' ')
+// 	}
+// 	state = append(state, []rune(text)...)
+// 	step = step % len(state)
+// 	return rotate(state, step)
+// }
 
 // rollText rolls a text across the segment display.
 // Exists when the context expires.
-func rollText(ctx context.Context, sd *segmentdisplay.SegmentDisplay, updateText <-chan string) {
-	colors := []cell.Color{
-		cell.ColorBlue,
-		cell.ColorRed,
-		cell.ColorYellow,
-		cell.ColorBlue,
-		cell.ColorGreen,
-		cell.ColorRed,
-		cell.ColorGreen,
-		cell.ColorRed,
-	}
-
-	text := "Termdash"
-	step := 0
-	ticker := time.NewTicker(500 * time.Millisecond)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			state := textState(text, sd.Capacity(), step)
-			var chunks []*segmentdisplay.TextChunk
-			for i := 0; i < sd.Capacity(); i++ {
-				if i >= len(state) {
-					break
-				}
-
-				color := colors[i%len(colors)]
-				chunks = append(chunks, segmentdisplay.NewChunk(
-					string(state[i]),
-					segmentdisplay.WriteCellOpts(cell.FgColor(color)),
-				))
-			}
-			if len(chunks) == 0 {
-				continue
-			}
-			if err := sd.Write(chunks); err != nil {
-				panic(err)
-			}
-			step++
-
-		case t := <-updateText:
-			text = t
-			sd.Reset()
-			step = 0
-
-		case <-ctx.Done():
-			return
-		}
-	}
-}
+// func rollText(ctx context.Context, sd *segmentdisplay.SegmentDisplay, updateText <-chan string) {
+// 	colors := []cell.Color{
+// 		cell.ColorBlue,
+// 		cell.ColorRed,
+// 		cell.ColorYellow,
+// 		cell.ColorBlue,
+// 		cell.ColorGreen,
+// 		cell.ColorRed,
+// 		cell.ColorGreen,
+// 		cell.ColorRed,
+// 	}
+//
+// 	text := "Termdash"
+// 	step := 0
+// 	ticker := time.NewTicker(500 * time.Millisecond)
+// 	defer ticker.Stop()
+// 	for {
+// 		select {
+// 		case <-ticker.C:
+// 			state := textState(text, sd.Capacity(), step)
+// 			var chunks []*segmentdisplay.TextChunk
+// 			for i := 0; i < sd.Capacity(); i++ {
+// 				if i >= len(state) {
+// 					break
+// 				}
+//
+// 				color := colors[i%len(colors)]
+// 				chunks = append(chunks, segmentdisplay.NewChunk(
+// 					string(state[i]),
+// 					segmentdisplay.WriteCellOpts(cell.FgColor(color)),
+// 				))
+// 			}
+// 			if len(chunks) == 0 {
+// 				continue
+// 			}
+// 			if err := sd.Write(chunks); err != nil {
+// 				panic(err)
+// 			}
+// 			step++
+//
+// 		case t := <-updateText:
+// 			text = t
+// 			sd.Reset()
+// 			step = 0
+//
+// 		case <-ctx.Done():
+// 			return
+// 		}
+// 	}
+// }
 
 func main() {
 	t, err := termbox.New()
@@ -117,14 +116,15 @@ func main() {
 	defer t.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	rollingSD, err := segmentdisplay.New(
-		segmentdisplay.MaximizeSegmentHeight(),
-	)
-	if err != nil {
-		panic(err)
-	}
-	updateText := make(chan string)
-	go rollText(ctx, rollingSD, updateText)
+	// rollingSD, thisErr := segmentdisplay.New(
+	// 	segmentdisplay.MaximizeSegmentHeight(),
+	// )
+	// if thisErr != nil {
+	// 	panic(thisErr)
+	// }
+
+	// updateText := make(chan string)
+	// go rollText(ctx, rollingSD, updateText)
 
 	input, err := textinput.New(
 		textinput.Label("New text:", cell.FgColor(cell.ColorBlue)),
@@ -137,7 +137,8 @@ func main() {
 	}
 
 	submitB, err := button.New("Submit", func() error {
-		updateText <- input.ReadAndClear()
+		//TODO: add submit action here
+		// updateText <- input.ReadAndClear()
 		return nil
 	},
 		button.GlobalKey(keyboard.KeyEnter),
@@ -145,7 +146,8 @@ func main() {
 	)
 	clearB, err := button.New("Clear", func() error {
 		input.ReadAndClear()
-		updateText <- ""
+		//TODO: what does the clear button do?
+		// updateText <- ""
 		return nil
 	},
 		button.WidthFor("Submit"),
@@ -160,13 +162,13 @@ func main() {
 	)
 
 	builder := grid.New()
-	builder.Add(
-		grid.RowHeightPerc(40,
-			grid.Widget(
-				rollingSD,
-			),
-		),
-	)
+	// builder.Add(
+	// 	grid.RowHeightPerc(40,
+	// 		grid.Widget(
+	// 			rollingSD,
+	// 		),
+	// 	),
+	// )
 	builder.Add(
 		grid.RowHeightPerc(20,
 			grid.Widget(
@@ -215,7 +217,8 @@ func main() {
 		panic(err)
 	}
 
-	if err := termdash.Run(ctx, t, c, termdash.RedrawInterval(500*time.Millisecond)); err != nil {
-		panic(err)
+	if thisErr := termdash.Run(ctx, t, c, termdash.RedrawInterval(
+		500*time.Millisecond)); thisErr != nil {
+		panic(thisErr)
 	}
 }
