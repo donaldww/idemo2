@@ -151,9 +151,10 @@ func maxTransactionsAdjust() int {
 	return r1.Intn(randFactor)
 }
 
-// playGauge continuously changes the displayed percent value on the gauge by the
-// step once every delay. Exits when the context expires.
-func playGauge(ctx context.Context, g *gauge.Gauge, step int, delay time.Duration, pt playType) {
+// playGauge continuously changes the displayed percent value on the
+// gauge by the step once every delay. Exits when the context expires.
+func playGauge(ctx context.Context, g *gauge.Gauge, step int,
+	delay time.Duration, pt playType) {
 	prog := 0
 	var maxT = maxTransactions - maxTransactionsAdjust()
 
@@ -229,7 +230,8 @@ func main() {
 	}
 
 	// SGX Monitor Window
-	softwareMonitorWindow, err := text.New(text.RollContent(), text.WrapAtWords())
+	softwareMonitorWindow, err := text.New(text.RollContent(),
+		text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
@@ -265,7 +267,7 @@ func main() {
 						container.SplitHorizontal(
 							container.Top(
 								container.Border(linestyle.Light),
-								container.BorderTitle(" Pre Consensus Transaction Monitor "),
+								container.BorderTitle(" Pre Consensus Transaction  Monitor "),
 								container.PlaceWidget(preConsensusWindow),
 							),
 							container.Bottom(container.Border(linestyle.Light),
@@ -296,7 +298,8 @@ func main() {
 	// Display randomly generated nodes in the 'consensusWindow'.
 	go writeConsensus(ctx, consensusWindow, consensusDelay)
 	// Play the transaction gathering gauge.
-	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
+	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay,
+		playTypeAbsolute)
 	// Logger
 	go writeLogger(ctx, softwareMonitorWindow, loggerDelay)
 
@@ -307,7 +310,8 @@ func main() {
 		}
 	}
 
-	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); thisErr != nil {
+	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(
+		quitter)); thisErr != nil {
 		panic(thisErr)
 	}
 }
@@ -315,7 +319,8 @@ func main() {
 // writeColorf adds terminal Color and Sprintf parameters to the Write method.
 //
 // Params:
-//  color: a cell.Color, such as cell.ColorRed, cell.ColorDefault, ... [termdash/cell/color.go]
+//  color: a cell.Color, such as cell.ColorRed, cell.ColorDefault,
+//  ... [termdash/cell/color.go]
 //  format: a Printf/Sprintf-style format string
 //  args: an optional list of comma-separated arguments (varags)
 //
