@@ -9,7 +9,7 @@ import (
 	"math"
 	"os"
 	"testing"
-	
+
 	"github.com/donaldww/ig"
 )
 
