@@ -38,18 +38,19 @@ const (
 	playTypeAbsolute
 )
 
-const buttonHeight = 1
-
 var (
 	config       = ig.NewConfig("iproto_config")
 	waitForGauge = make(chan bool)
 )
 
 var (
+	buttonHeight = config.GetInt("buttonHeight")
+
 	// Relative sizes of windows
-	splitPercentLeft     = config.GetInt("splitPercentLeft")
-	splitPercentRight    = config.GetInt("splitPercentRight")
-	splitPercentVertical = config.GetInt("splitPercentVertical")
+	gaugeConsensus      = config.GetInt("gaugeConsensus")
+	consensusSGXmonitor = config.GetInt("consensusSGXmonitor")
+	inputBlock          = config.GetInt("inputBlock")
+	inputButtons        = config.GetInt("inputButtons")
 
 	// Consensus widget
 	numberOfNodes     = config.GetInt("numberOfNodes")
@@ -315,7 +316,7 @@ func main() {
 													),
 												),
 											),
-											container.SplitPercent(33), // the imput field
+											container.SplitPercent(inputBlock), // the imput field
 										),
 									),
 									container.Bottom(
@@ -323,7 +324,7 @@ func main() {
 										container.BorderTitle(" Block Creation Monitor "),
 										container.PlaceWidget(blockWriteWindow),
 									),
-									container.SplitPercent(20),
+									container.SplitPercent(inputButtons),
 								),
 							),
 						),
@@ -333,10 +334,10 @@ func main() {
 						container.BorderTitle(" SGX Security Monitor "),
 						container.PlaceWidget(softwareMonitorWindow),
 					),
-					container.SplitPercent(85),
+					container.SplitPercent(consensusSGXmonitor),
 				),
 			),
-			container.SplitPercent(10),
+			container.SplitPercent(gaugeConsensus),
 		),
 	)
 	if err != nil {
