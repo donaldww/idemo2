@@ -207,9 +207,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// The input field.
-	input, err := textinput.New(
-		textinput.Label(" Amount: ", cell.FgColor(cell.ColorBlue)),
-		textinput.MaxWidthCells(20),
+	inputT, err := textinput.New(
+		textinput.Label(" Sell: ", cell.FgColor(cell.ColorBlue)),
+		textinput.MaxWidthCells(10),
 		textinput.Filter(unicode.IsDigit),
 	)
 	if err != nil {
@@ -217,7 +217,7 @@ func main() {
 	}
 
 	// The Buttons.
-	submitB, err := button.New("Submit", func() error {
+	sendB, err := button.New("Send", func() error {
 		//TODO: add submit action here
 		// updateText <- input.ReadAndClear()
 		return nil
@@ -227,25 +227,25 @@ func main() {
 		button.FillColor(cell.ColorNumber(220)),
 	)
 
-	// clearB, err := button.New("Clear", func() error {
-	// 	input.ReadAndClear()
-	// 	//TODO: what does the clear button do?
-	// 	// updateText <- ""
-	// 	return nil
-	// },
-	// 	button.Height(buttonHeight),
-	// 	button.WidthFor("Submit"),
-	// 	button.FillColor(cell.ColorNumber(220)),
-	// )
-
-	quitB, err := button.New("Quit", func() error {
-		cancel()
+	reloadB, err := button.New("Reload", func() error {
+		inputT.ReadAndClear()
+		//TODO: what does the clear button do?
+		// updateText <- ""
 		return nil
 	},
 		button.Height(buttonHeight),
 		button.WidthFor("Submit"),
-		button.FillColor(cell.ColorNumber(196)),
+		button.FillColor(cell.ColorNumber(220)),
 	)
+
+	// quitB, err := button.New("Quit", func() error {
+	// 	cancel()
+	// 	return nil
+	// },
+	// 	button.Height(buttonHeight),
+	// 	button.WidthFor("Submit"),
+	// 	button.FillColor(cell.ColorNumber(196)),
+	// )
 
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
@@ -285,57 +285,46 @@ func main() {
 		container.Border(linestyle.Light),
 		container.BorderColor(cell.ColorDefault),
 		container.BorderTitle(title),
-		container.SplitVertical(
-
-			// Left Container.
-			container.Left(
-				container.SplitHorizontal(
-					container.Top(
-						container.PlaceWidget(transactionGauge),
-					),
-					container.Bottom(
-						container.Border(linestyle.Light),
-						container.BorderTitle(" IG17 Consensus Group Randomizer "),
-						container.PlaceWidget(consensusWindow),
-					),
-					container.SplitPercent(splitPercentLeft),
-				),
+		container.SplitHorizontal(
+			container.Top(
+				container.PlaceWidget(transactionGauge),
 			),
-			//
-			// Right Container.
-			container.Right(
+			container.Bottom(
 				container.SplitHorizontal(
 					container.Top(
-						container.SplitHorizontal(
-							container.Top(
+						container.SplitVertical(
+							container.Left(
 								container.Border(linestyle.Light),
-								container.BorderTitle(" Pre Consensus Transaction  Monitor "),
-								container.SplitVertical(
-
-									container.Left(
-										container.PlaceWidget(input),
-									),
-
-									container.Right(
+								container.BorderTitle(" IG17 Consensus Group Randomizer "),
+								container.PlaceWidget(consensusWindow),
+							),
+							container.Right(
+								container.SplitHorizontal(
+									container.Top(
 										container.SplitVertical(
-
 											container.Left(
-												container.PlaceWidget(submitB),
+												container.PlaceWidget(inputT),
 											),
-
 											container.Right(
-												container.PlaceWidget(quitB),
+												container.SplitVertical(
+													container.Left(
+														container.PlaceWidget(sendB),
+													),
+													container.Right(
+														container.PlaceWidget(reloadB),
+													),
+												),
 											),
+											container.SplitPercent(33), // the imput field
 										),
 									),
-									container.SplitPercent(33),
+									container.Bottom(
+										container.Border(linestyle.Light),
+										container.BorderTitle(" Block Creation Monitor "),
+										container.PlaceWidget(blockWriteWindow),
+									),
+									container.SplitPercent(20),
 								),
-
-								// container.PlaceWidget(preConsensusWindow),
-							),
-							container.Bottom(container.Border(linestyle.Light),
-								container.BorderTitle(" Block Creation Monitor "),
-								container.PlaceWidget(blockWriteWindow),
 							),
 						),
 					),
@@ -343,12 +332,12 @@ func main() {
 						container.Border(linestyle.Light),
 						container.BorderTitle(" SGX Security Monitor "),
 						container.PlaceWidget(softwareMonitorWindow),
-					), // Bottom
-					container.SplitPercent(splitPercentRight),
+					),
+					container.SplitPercent(85),
 				),
-			), // Right
-			container.SplitPercent(splitPercentVertical),
-		), // SplitVertical
+			),
+			container.SplitPercent(10),
+		),
 	)
 	if err != nil {
 		panic(err)
