@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/mum4k/termdash/cell"
@@ -14,28 +15,46 @@ import (
 	"github.com/donaldww/idemo/internal/sgx"
 )
 
+type loggerMSG struct {
+	msg   string
+	color cell.Color
+}
+
+var loggerCH = make(chan loggerMSG, 10)
+
 // writeLogger logs messages into the SGX monitor widget.
-func writeLogger(_ context.Context, t *text.Text, delay_ time.Duration) {
+func writeLogger(_ context.Context, t *text.Text) {
 	counter := 0
 	for {
+		select {
+		case log := <-loggerCH:
+			if counter >= loggerRefresh {
+				t.Reset()
+				counter = 0
+			}
+			tNow := time.Now()
+			writeColorf(t, log.color, " %s: %s\n",
+				time.Date(
+					tNow.Year(), tNow.Month(), tNow.Day(),
+					tNow.Hour(), tNow.Minute(), tNow.Second(), tNow.Nanosecond(),
+					tNow.Location(),
+				),
+				log.msg,
+			)
+			counter++
+		}
+	}
+}
+
+func enclaveScan(delay time.Duration) {
+	for {
 		sgx.Scan()
-		tNow := time.Now()
-		err := sgx.IsValid()
-		if counter >= loggerRefresh {
-			t.Reset()
-			counter = 0
-		}
-		if err != nil {
-			writeColorf(t, cell.ColorRed, " %v\n", err)
+		if err := sgx.IsValid(); err != nil {
+			loggerCH <- loggerMSG{fmt.Sprintf("%v", err), cell.ColorRed}
 		} else {
-			writeColorf(t, cell.ColorGreen, " %s: %s\n", time.Date(
-				tNow.Year(), tNow.Month(), tNow.Day(), tNow.Hour(), tNow.Minute(),
-				tNow.Second(), tNow.Nanosecond(),
-				tNow.Location()),
-				"IG17-SGX ENCLAVE: Verified.")
+			loggerCH <- loggerMSG{msg: "IG17-SGX ENCLAVE: Verified.", color: cell.ColorGreen}
 		}
-		counter++
 		sgx.Reset()
-		time.Sleep(delay_)
+		time.Sleep(delay)
 	}
 }

@@ -327,7 +327,8 @@ func main() {
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay,
 		playTypeAbsolute)
 	// Logger
-	go writeLogger(ctx, softwareMonitorWindow, loggerDelay)
+	go writeLogger(ctx, softwareMonitorWindow)
+	go enclaveScan(loggerDelay)
 
 	// Exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
