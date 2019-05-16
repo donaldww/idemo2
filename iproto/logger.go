@@ -20,11 +20,10 @@ type loggerMSG struct {
 	color cell.Color
 }
 
-var loggerCH = make(chan loggerMSG, 10)
-
 // writeLogger logs messages into the SGX monitor widget.
-func writeLogger(_ context.Context, t *text.Text) {
+func writeLogger(_ context.Context, t *text.Text, loggerCH chan loggerMSG) {
 	counter := 0
+	loggerRefresh := config.GetInt("loggerRefresh")
 	for {
 		select {
 		case log := <-loggerCH:
@@ -46,7 +45,8 @@ func writeLogger(_ context.Context, t *text.Text) {
 	}
 }
 
-func enclaveScan(delay time.Duration) {
+func enclaveScan(loggerCH chan loggerMSG) {
+	loggerDelay := config.GetMilliseconds("loggerDelay")
 	for {
 		sgx.Scan()
 		if err := sgx.IsValid(); err != nil {
@@ -55,6 +55,6 @@ func enclaveScan(delay time.Duration) {
 			loggerCH <- loggerMSG{msg: "IG17-SGX ENCLAVE: Verified.", color: cell.ColorGreen}
 		}
 		sgx.Reset()
-		time.Sleep(delay)
+		time.Sleep(loggerDelay)
 	}
 }

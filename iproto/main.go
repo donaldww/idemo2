@@ -10,20 +10,17 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-	"unicode"
 
 	"github.com/donaldww/ig"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/container"
-	"github.com/mum4k/termdash/keyboard"
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/termbox"
 	"github.com/mum4k/termdash/terminal/terminalapi"
 	"github.com/mum4k/termdash/widgets/button"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-	"github.com/mum4k/termdash/widgets/textinput"
 
 	"github.com/donaldww/idemo/internal/consensus"
 )
@@ -32,7 +29,7 @@ import (
 type playType int
 
 const (
-	version                  = "v0.5.0"
+	version                  = "v0.6.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
@@ -57,10 +54,6 @@ var (
 	consensusDelay    = config.GetMilliseconds("consensusDelay")
 	moneyBagsDelay    = config.GetMilliseconds("moneyBagsDelay")
 
-	// SGX monitor widget (logger)
-	loggerDelay   = config.GetMilliseconds("loggerDelay")
-	loggerRefresh = config.GetInt("loggerRefresh")
-
 	// Gauge widget
 	gaugeDelay    = config.GetMilliseconds("gaugeDelay")
 	endGaugeWait  = config.GetMilliseconds("endGaugeWait")
@@ -72,8 +65,6 @@ var (
 
 //TODO: Implement auto-load function for config file values.
 //TODO: Add pre-consensus check into the remaining two windows.
-//TODO: Re-write writeLogger as a general purpose logger that receives
-// messages using buffered channels.
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
@@ -107,7 +98,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
 		}
 
 		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
-		writeColorf(t, cell.ColorRed, "%s\n", ldr)
+		writeColorf(t, cell.ColorRed, "\n %s\n", ldr)
 
 		select {
 		case <-waitForGauge:
@@ -116,7 +107,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
 
 		writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
-		writeColorf(t, cell.ColorRed, "--> ")
+		writeColorf(t, cell.ColorRed, "--> \n")
 
 		for i := 0; i < numberOfMoneyBags; i++ {
 			writeColorf(t, cell.ColorRed, "💰")
@@ -166,6 +157,14 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 	}
 }
 
+// Draw and redraw the pre-consensus account.
+func reload(t *text.Text) {
+	balance := config.GetInt("openBal")
+	t.Reset()
+	writeColorf(t, cell.ColorCyan, "\n Balance: ")
+	writeColorf(t, cell.ColorRed, "%d", balance)
+}
+
 func main() {
 	var err error
 
@@ -180,46 +179,27 @@ func main() {
 	// Returns a context and cancel function.
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// The input field.
-	inputT, err := textinput.New(
-		textinput.Label(" Sell: ", cell.FgColor(cell.ColorBlue)),
-		textinput.MaxWidthCells(10),
-		textinput.Filter(unicode.IsDigit),
-	)
+	// Display an account name and balance.
+	balanceWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
 
-	// The Buttons.
-	sendB, err := button.New("Send", func() error {
-		//TODO: add submit action here
-		// updateText <- input.ReadAndClear()
-		return nil
-	},
-		button.Height(buttonHeight),
-		button.GlobalKey(keyboard.KeyEnter),
-		button.FillColor(cell.ColorNumber(220)),
-	)
+	// Display an account name and balance.
+	balanceLogger, err := text.New()
+	if err != nil {
+		panic(err)
+	}
 
+	// reloadB is a button that will reload the account with starting balance.
 	reloadB, err := button.New("Reload", func() error {
-		inputT.ReadAndClear()
-		//TODO: what does the clear button do?
-		// updateText <- ""
+		reload(balanceWindow)
 		return nil
 	},
 		button.Height(buttonHeight),
 		button.WidthFor("Submit"),
 		button.FillColor(cell.ColorNumber(220)),
 	)
-
-	// quitB, err := button.New("Quit", func() error {
-	// 	cancel()
-	// 	return nil
-	// },
-	// 	button.Height(buttonHeight),
-	// 	button.WidthFor("Submit"),
-	// 	button.FillColor(cell.ColorNumber(196)),
-	// )
 
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
@@ -232,7 +212,7 @@ func main() {
 		gauge.Height(1),
 		gauge.Color(cell.ColorBlue),
 		gauge.Border(linestyle.Light),
-		gauge.BorderTitle(" Processing Infinicoin Transactions "),
+		gauge.BorderTitle(" Collecting Infinicoin Transactions "),
 	)
 	if err != nil {
 		panic(err)
@@ -275,36 +255,42 @@ func main() {
 							container.Right(
 								container.SplitHorizontal(
 									container.Top(
-										container.SplitVertical(
-											container.Left(
-												container.PlaceWidget(inputT),
-											),
-											container.Right(
+										container.Border(linestyle.Light),
+										container.BorderColor(cell.ColorCyan),
+										container.BorderTitle(
+											" Account: "+config.GetString("accountID")+" "),
+										container.SplitHorizontal(
+											container.Top(
 												container.SplitVertical(
 													container.Left(
-														container.PlaceWidget(sendB),
+														container.PlaceWidget(balanceWindow),
 													),
 													container.Right(
 														container.PlaceWidget(reloadB),
 													),
+													container.SplitPercent(70),
 												),
+											),
+											container.Bottom(
+												container.PlaceWidget(balanceLogger),
 											),
 											container.SplitPercent(inputBlock), // the imput field
 										),
 									),
 									container.Bottom(
 										container.Border(linestyle.Light),
-										container.BorderTitle(" Block Creation Monitor "),
+										container.BorderTitle(" Block Monitor "),
 										container.PlaceWidget(blockWriteWindow),
 									),
 									container.SplitPercent(inputButtons),
 								),
 							),
+							container.SplitPercent(40),
 						),
 					),
 					container.Bottom(
 						container.Border(linestyle.Light),
-						container.BorderTitle(" SGX Security Monitor "),
+						container.BorderTitle(" Enclave Monitor "),
 						container.PlaceWidget(softwareMonitorWindow),
 					),
 					container.SplitPercent(consensusSGXmonitor),
@@ -327,29 +313,29 @@ func main() {
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay,
 		playTypeAbsolute)
 	// Logger
-	go writeLogger(ctx, softwareMonitorWindow)
-	go enclaveScan(loggerDelay)
 
-	// Exit handler.
+	var (
+		loggerCH  = make(chan loggerMSG, 10)
+		loggerCH2 = make(chan loggerMSG, 10)
+	)
+
+	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
+	go enclaveScan(loggerCH)
+
+	go writeLogger(ctx, balanceLogger, loggerCH2)
+	go preconScan(loggerCH2)
+
+	reload(balanceWindow)
+
+	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
 		if k.Key == 'q' || k.Key == 'Q' {
 			cancel() // generated by contextWithCancel()
 		}
 	}
 
+	// Run the program.
 	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); thisErr != nil {
 		panic(thisErr)
 	}
-}
-
-// writeColorf adds terminal Color and Sprintf parameters to the Write method.
-//
-// Params:
-//  color: a cell.Color, such as cell.ColorRed, cell.ColorDefault,
-//  ... [termdash/cell/color.go]
-//  format: a Printf/Sprintf-style format string
-//  args: an optional list of comma-separated arguments (varags)
-//
-func writeColorf(t *text.Text, color cell.Color, format string, args ...interface{}) {
-	_ = t.Write(fmt.Sprintf(format, args...), text.WriteCellOpts(cell.FgColor(color)))
 }
