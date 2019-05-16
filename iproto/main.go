@@ -26,7 +26,6 @@ import (
 	"github.com/mum4k/termdash/widgets/textinput"
 
 	"github.com/donaldww/idemo/internal/consensus"
-	"github.com/donaldww/idemo/internal/sgx"
 )
 
 // playType indicates how to play a gauge.
@@ -75,32 +74,6 @@ var (
 //TODO: Add pre-consensus check into the remaining two windows.
 //TODO: Re-write writeLogger as a general purpose logger that receives
 // messages using buffered channels.
-
-// writeLogger logs messages into the SGX monitor widget.
-func writeLogger(_ context.Context, t *text.Text, delay_ time.Duration) {
-	counter := 0
-	for {
-		sgx.Scan()
-		tNow := time.Now()
-		err := sgx.IsValid()
-		if counter >= loggerRefresh {
-			t.Reset()
-			counter = 0
-		}
-		if err != nil {
-			writeColorf(t, cell.ColorRed, " %v\n", err)
-		} else {
-			writeColorf(t, cell.ColorGreen, " %s: %s\n", time.Date(
-				tNow.Year(), tNow.Month(), tNow.Day(), tNow.Hour(), tNow.Minute(),
-				tNow.Second(), tNow.Nanosecond(),
-				tNow.Location()),
-				"IG17-SGX ENCLAVE: Verified.")
-		}
-		counter++
-		sgx.Reset()
-		time.Sleep(delay_)
-	}
-}
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
@@ -363,8 +336,7 @@ func main() {
 		}
 	}
 
-	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(
-		quitter)); thisErr != nil {
+	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); thisErr != nil {
 		panic(thisErr)
 	}
 }
