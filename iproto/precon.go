@@ -12,8 +12,8 @@ import (
 
 // preconScan is a placeholder function that puts a yellow message in the SGX monitor.
 func preconScan(loggerCH chan loggerMSG) {
+	loggerCH <- loggerMSG{"Precon account connected.", cell.ColorYellow}
 	for {
-		loggerCH <- loggerMSG{"Precon Check Failed! Not enough Infinicoin.", cell.ColorYellow}
 		time.Sleep(3 * time.Second)
 	}
 }

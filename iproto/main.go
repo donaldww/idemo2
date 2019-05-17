@@ -14,7 +14,7 @@ import (
 	"github.com/donaldww/ig"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
-	"github.com/mum4k/termdash/container"
+	cr "github.com/mum4k/termdash/container"
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/termbox"
 	"github.com/mum4k/termdash/terminal/terminalapi"
@@ -234,69 +234,69 @@ func main() {
 	title := fmt.Sprintf(" IG17 DEMO %s - PRESS Q TO QUIT ", version)
 
 	// Container Layout.
-	c, err := container.New(
+	c, err := cr.New(
 		t,
-		container.Border(linestyle.Light),
-		container.BorderColor(cell.ColorDefault),
-		container.BorderTitle(title),
-		container.SplitHorizontal(
-			container.Top(
-				container.PlaceWidget(transactionGauge),
+		cr.Border(linestyle.Light),
+		cr.BorderColor(cell.ColorDefault),
+		cr.BorderTitle(title),
+		cr.SplitHorizontal(
+			cr.Top(
+				cr.PlaceWidget(transactionGauge),
 			),
-			container.Bottom(
-				container.SplitHorizontal(
-					container.Top(
-						container.SplitVertical(
-							container.Left(
-								container.Border(linestyle.Light),
-								container.BorderTitle(" IG17 Consensus Group Randomizer "),
-								container.PlaceWidget(consensusWindow),
+			cr.Bottom(
+				cr.SplitHorizontal(
+					cr.Top(
+						cr.SplitVertical(
+							cr.Left(
+								cr.Border(linestyle.Light),
+								cr.BorderTitle(" IG17 Consensus Group Randomizer "),
+								cr.PlaceWidget(consensusWindow),
 							),
-							container.Right(
-								container.SplitHorizontal(
-									container.Top(
-										container.Border(linestyle.Light),
-										container.BorderColor(cell.ColorCyan),
-										container.BorderTitle(
+							cr.Right(
+								cr.SplitHorizontal(
+									cr.Top(
+										cr.Border(linestyle.Light),
+										cr.BorderColor(cell.ColorCyan),
+										cr.BorderTitle(
 											" Account: "+config.GetString("accountID")+" "),
-										container.SplitHorizontal(
-											container.Top(
-												container.SplitVertical(
-													container.Left(
-														container.PlaceWidget(balanceWindow),
+										cr.SplitHorizontal(
+											cr.Top(
+												cr.SplitVertical(
+													cr.Left(
+														cr.PlaceWidget(balanceWindow),
 													),
-													container.Right(
-														container.PlaceWidget(reloadB),
+													cr.Right(
+														cr.PlaceWidget(reloadB),
 													),
-													container.SplitPercent(70),
+													cr.SplitPercent(70),
 												),
 											),
-											container.Bottom(
-												container.PlaceWidget(balanceLogger),
+											cr.Bottom(
+												cr.PlaceWidget(balanceLogger),
 											),
-											container.SplitPercent(inputBlock), // the imput field
+											cr.SplitPercent(inputBlock), // the imput field
 										),
 									),
-									container.Bottom(
-										container.Border(linestyle.Light),
-										container.BorderTitle(" Block Monitor "),
-										container.PlaceWidget(blockWriteWindow),
+									cr.Bottom(
+										cr.Border(linestyle.Light),
+										cr.BorderTitle(" Block Monitor "),
+										cr.PlaceWidget(blockWriteWindow),
 									),
-									container.SplitPercent(inputButtons),
+									cr.SplitPercent(inputButtons),
 								),
 							),
-							container.SplitPercent(40),
+							cr.SplitPercent(40),
 						),
 					),
-					container.Bottom(
-						container.Border(linestyle.Light),
-						container.BorderTitle(" Enclave Monitor "),
-						container.PlaceWidget(softwareMonitorWindow),
+					cr.Bottom(
+						cr.Border(linestyle.Light),
+						cr.BorderTitle(" Enclave Monitor "),
+						cr.PlaceWidget(softwareMonitorWindow),
 					),
-					container.SplitPercent(consensusSGXmonitor),
+					cr.SplitPercent(consensusSGXmonitor),
 				),
 			),
-			container.SplitPercent(gaugeConsensus),
+			cr.SplitPercent(gaugeConsensus),
 		),
 	)
 	if err != nil {
@@ -324,6 +324,7 @@ func main() {
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
 	go preconScan(loggerCH2)
+	go tcpServer(balanceLogger, loggerCH2)
 
 	reload(balanceWindow)
 
