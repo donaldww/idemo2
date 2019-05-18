@@ -13,7 +13,7 @@ import (
 
 func main() {
 	CONNECT := ig.NewConfig("iproto_config").GetString("TCPconnect")
-	
+
 	c, err := net.Dial("tcp", CONNECT)
 	if err != nil {
 		fmt.Println(err)

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-	
+
 	"github.com/donaldww/ig"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
@@ -20,7 +20,7 @@ import (
 	"github.com/mum4k/termdash/terminal/terminalapi"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-	
+
 	"github.com/donaldww/idemo/internal/consensus"
 )
 
@@ -39,9 +39,6 @@ var (
 )
 
 var (
-	//TODO: remove buttonHeight from iproto_config
-	// buttonHeight = config.GetInt("buttonHeight")
-
 	// Relative sizes of windows
 	gaugeConsensus      = config.GetInt("gaugeConsensus")
 	consensusSGXmonitor = config.GetInt("consensusSGXmonitor")
@@ -64,7 +61,6 @@ var (
 )
 
 //TODO: Implement auto-load function for config file values.
-//TODO: Add pre-consensus check into the remaining two windows.
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
@@ -157,8 +153,6 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 	}
 }
 
-
-
 func main() {
 	var err error
 
@@ -184,16 +178,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// // reloadB is a button that will reload the account with starting balance.
-	// reloadB, err := button.New("Reload", func() error {
-	// 	reload(balanceWindow)
-	// 	return nil
-	// },
-	// 	button.Height(buttonHeight),
-	// 	button.WidthFor("Submit"),
-	// 	button.FillColor(cell.ColorNumber(220)),
-	// )
 
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
@@ -255,15 +239,6 @@ func main() {
 											" Account: "+config.GetString("accountID")+" "),
 										cr.SplitHorizontal(
 											cr.Top(
-												// cr.SplitVertical(
-												// 	cr.Left(
-												// 		cr.PlaceWidget(balanceWindow),
-												// 	),
-												// 	cr.Right(
-												// 		cr.PlaceWidget(reloadB),
-												// 	),
-												// 	cr.SplitPercent(70),
-												// ),
 												cr.PlaceWidget(balanceWindow),
 											),
 											cr.Bottom(
@@ -318,10 +293,7 @@ func main() {
 	go enclaveScan(loggerCH)
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
-	// go preconScan(loggerCH2)
 	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
-
-	
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
