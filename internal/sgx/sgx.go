@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/donaldww/ig"
 )
@@ -120,13 +119,7 @@ type enclaveError struct {
 }
 
 func (e enclaveError) Error() string {
-	t := time.Now()
-	err := fmt.Sprintf("%v: %v", time.Date(
-		t.Year(), t.Month(), t.Day(),
-		t.Hour(), t.Minute(), t.Second(), t.Nanosecond(),
-		t.Location()),
-		e.What)
-	return err
+	return fmt.Sprintf("%v", e.What)
 }
 
 // IsValid determines if a scanned directory matches a valid one.

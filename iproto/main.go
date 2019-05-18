@@ -10,30 +10,25 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-	"unicode"
-
+	
 	"github.com/donaldww/ig"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
-	"github.com/mum4k/termdash/container"
-	"github.com/mum4k/termdash/keyboard"
+	cr "github.com/mum4k/termdash/container"
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/termbox"
 	"github.com/mum4k/termdash/terminal/terminalapi"
-	"github.com/mum4k/termdash/widgets/button"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-	"github.com/mum4k/termdash/widgets/textinput"
-
+	
 	"github.com/donaldww/idemo/internal/consensus"
-	"github.com/donaldww/idemo/internal/sgx"
 )
 
 // playType indicates how to play a gauge.
 type playType int
 
 const (
-	version                  = "v0.5.0"
+	version                  = "v0.7.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
@@ -44,7 +39,8 @@ var (
 )
 
 var (
-	buttonHeight = config.GetInt("buttonHeight")
+	//TODO: remove buttonHeight from iproto_config
+	// buttonHeight = config.GetInt("buttonHeight")
 
 	// Relative sizes of windows
 	gaugeConsensus      = config.GetInt("gaugeConsensus")
@@ -58,10 +54,6 @@ var (
 	consensusDelay    = config.GetMilliseconds("consensusDelay")
 	moneyBagsDelay    = config.GetMilliseconds("moneyBagsDelay")
 
-	// SGX monitor widget (logger)
-	loggerDelay   = config.GetMilliseconds("loggerDelay")
-	loggerRefresh = config.GetInt("loggerRefresh")
-
 	// Gauge widget
 	gaugeDelay    = config.GetMilliseconds("gaugeDelay")
 	endGaugeWait  = config.GetMilliseconds("endGaugeWait")
@@ -73,34 +65,6 @@ var (
 
 //TODO: Implement auto-load function for config file values.
 //TODO: Add pre-consensus check into the remaining two windows.
-//TODO: Re-write writeLogger as a general purpose logger that receives
-// messages using buffered channels.
-
-// writeLogger logs messages into the SGX monitor widget.
-func writeLogger(_ context.Context, t *text.Text, delay_ time.Duration) {
-	counter := 0
-	for {
-		sgx.Scan()
-		tNow := time.Now()
-		err := sgx.IsValid()
-		if counter >= loggerRefresh {
-			t.Reset()
-			counter = 0
-		}
-		if err != nil {
-			writeColorf(t, cell.ColorRed, " %v\n", err)
-		} else {
-			writeColorf(t, cell.ColorGreen, " %s: %s\n", time.Date(
-				tNow.Year(), tNow.Month(), tNow.Day(), tNow.Hour(), tNow.Minute(),
-				tNow.Second(), tNow.Nanosecond(),
-				tNow.Location()),
-				"IG17-SGX ENCLAVE: Verified.")
-		}
-		counter++
-		sgx.Reset()
-		time.Sleep(delay_)
-	}
-}
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
@@ -134,7 +98,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
 		}
 
 		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
-		writeColorf(t, cell.ColorRed, "%s\n", ldr)
+		writeColorf(t, cell.ColorRed, "\n %s\n", ldr)
 
 		select {
 		case <-waitForGauge:
@@ -143,7 +107,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
 
 		writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
-		writeColorf(t, cell.ColorRed, "--> ")
+		writeColorf(t, cell.ColorRed, "--> \n")
 
 		for i := 0; i < numberOfMoneyBags; i++ {
 			writeColorf(t, cell.ColorRed, "💰")
@@ -193,6 +157,8 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 	}
 }
 
+
+
 func main() {
 	var err error
 
@@ -207,45 +173,26 @@ func main() {
 	// Returns a context and cancel function.
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// The input field.
-	inputT, err := textinput.New(
-		textinput.Label(" Sell: ", cell.FgColor(cell.ColorBlue)),
-		textinput.MaxWidthCells(10),
-		textinput.Filter(unicode.IsDigit),
-	)
+	// Display an account name and balance.
+	balanceWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
 
-	// The Buttons.
-	sendB, err := button.New("Send", func() error {
-		//TODO: add submit action here
-		// updateText <- input.ReadAndClear()
-		return nil
-	},
-		button.Height(buttonHeight),
-		button.GlobalKey(keyboard.KeyEnter),
-		button.FillColor(cell.ColorNumber(220)),
-	)
+	// Display an account name and balance.
+	balanceLogger, err := text.New()
+	if err != nil {
+		panic(err)
+	}
 
-	reloadB, err := button.New("Reload", func() error {
-		inputT.ReadAndClear()
-		//TODO: what does the clear button do?
-		// updateText <- ""
-		return nil
-	},
-		button.Height(buttonHeight),
-		button.WidthFor("Submit"),
-		button.FillColor(cell.ColorNumber(220)),
-	)
-
-	// quitB, err := button.New("Quit", func() error {
-	// 	cancel()
+	// // reloadB is a button that will reload the account with starting balance.
+	// reloadB, err := button.New("Reload", func() error {
+	// 	reload(balanceWindow)
 	// 	return nil
 	// },
 	// 	button.Height(buttonHeight),
 	// 	button.WidthFor("Submit"),
-	// 	button.FillColor(cell.ColorNumber(196)),
+	// 	button.FillColor(cell.ColorNumber(220)),
 	// )
 
 	// Consensus Generator Window.
@@ -259,7 +206,7 @@ func main() {
 		gauge.Height(1),
 		gauge.Color(cell.ColorBlue),
 		gauge.Border(linestyle.Light),
-		gauge.BorderTitle(" Processing Infinicoin Transactions "),
+		gauge.BorderTitle(" Collecting Infinicoin Transactions "),
 	)
 	if err != nil {
 		panic(err)
@@ -281,63 +228,70 @@ func main() {
 	title := fmt.Sprintf(" IG17 DEMO %s - PRESS Q TO QUIT ", version)
 
 	// Container Layout.
-	c, err := container.New(
+	c, err := cr.New(
 		t,
-		container.Border(linestyle.Light),
-		container.BorderColor(cell.ColorDefault),
-		container.BorderTitle(title),
-		container.SplitHorizontal(
-			container.Top(
-				container.PlaceWidget(transactionGauge),
+		cr.Border(linestyle.Light),
+		cr.BorderColor(cell.ColorDefault),
+		cr.BorderTitle(title),
+		cr.SplitHorizontal(
+			cr.Top(
+				cr.PlaceWidget(transactionGauge),
 			),
-			container.Bottom(
-				container.SplitHorizontal(
-					container.Top(
-						container.SplitVertical(
-							container.Left(
-								container.Border(linestyle.Light),
-								container.BorderTitle(" IG17 Consensus Group Randomizer "),
-								container.PlaceWidget(consensusWindow),
+			cr.Bottom(
+				cr.SplitHorizontal(
+					cr.Top(
+						cr.SplitVertical(
+							cr.Left(
+								cr.Border(linestyle.Light),
+								cr.BorderTitle(" IG17 Consensus Group Randomizer "),
+								cr.PlaceWidget(consensusWindow),
 							),
-							container.Right(
-								container.SplitHorizontal(
-									container.Top(
-										container.SplitVertical(
-											container.Left(
-												container.PlaceWidget(inputT),
+							cr.Right(
+								cr.SplitHorizontal(
+									cr.Top(
+										cr.Border(linestyle.Light),
+										cr.BorderColor(cell.ColorCyan),
+										cr.BorderTitle(
+											" Account: "+config.GetString("accountID")+" "),
+										cr.SplitHorizontal(
+											cr.Top(
+												// cr.SplitVertical(
+												// 	cr.Left(
+												// 		cr.PlaceWidget(balanceWindow),
+												// 	),
+												// 	cr.Right(
+												// 		cr.PlaceWidget(reloadB),
+												// 	),
+												// 	cr.SplitPercent(70),
+												// ),
+												cr.PlaceWidget(balanceWindow),
 											),
-											container.Right(
-												container.SplitVertical(
-													container.Left(
-														container.PlaceWidget(sendB),
-													),
-													container.Right(
-														container.PlaceWidget(reloadB),
-													),
-												),
+											cr.Bottom(
+												cr.PlaceWidget(balanceLogger),
 											),
-											container.SplitPercent(inputBlock), // the imput field
+											cr.SplitPercent(inputBlock), // the imput field
 										),
 									),
-									container.Bottom(
-										container.Border(linestyle.Light),
-										container.BorderTitle(" Block Creation Monitor "),
-										container.PlaceWidget(blockWriteWindow),
+									cr.Bottom(
+										cr.Border(linestyle.Light),
+										cr.BorderTitle(" Block Monitor "),
+										cr.PlaceWidget(blockWriteWindow),
 									),
-									container.SplitPercent(inputButtons),
+									cr.SplitPercent(inputButtons),
 								),
 							),
+							cr.SplitPercent(40),
 						),
 					),
-					container.Bottom(
-						container.Border(linestyle.Light),
-						container.BorderTitle(" SGX Security Monitor "),
-						container.PlaceWidget(softwareMonitorWindow),
+					cr.Bottom(
+						cr.Border(linestyle.Light),
+						cr.BorderTitle(" Enclave Monitor "),
+						cr.PlaceWidget(softwareMonitorWindow),
 					),
-					container.SplitPercent(consensusSGXmonitor),
+					cr.SplitPercent(consensusSGXmonitor),
 				),
 			),
-			container.SplitPercent(gaugeConsensus),
+			cr.SplitPercent(gaugeConsensus),
 		),
 	)
 	if err != nil {
@@ -354,29 +308,30 @@ func main() {
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay,
 		playTypeAbsolute)
 	// Logger
-	go writeLogger(ctx, softwareMonitorWindow, loggerDelay)
 
-	// Exit handler.
+	var (
+		loggerCH  = make(chan loggerMSG, 10)
+		loggerCH2 = make(chan loggerMSG, 10)
+	)
+
+	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
+	go enclaveScan(loggerCH)
+
+	go writeLogger(ctx, balanceLogger, loggerCH2)
+	// go preconScan(loggerCH2)
+	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
+
+	
+
+	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
 		if k.Key == 'q' || k.Key == 'Q' {
 			cancel() // generated by contextWithCancel()
 		}
 	}
 
-	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(
-		quitter)); thisErr != nil {
+	// Run the program.
+	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); thisErr != nil {
 		panic(thisErr)
 	}
-}
-
-// writeColorf adds terminal Color and Sprintf parameters to the Write method.
-//
-// Params:
-//  color: a cell.Color, such as cell.ColorRed, cell.ColorDefault,
-//  ... [termdash/cell/color.go]
-//  format: a Printf/Sprintf-style format string
-//  args: an optional list of comma-separated arguments (varags)
-//
-func writeColorf(t *text.Text, color cell.Color, format string, args ...interface{}) {
-	_ = t.Write(fmt.Sprintf(format, args...), text.WriteCellOpts(cell.FgColor(color)))
 }

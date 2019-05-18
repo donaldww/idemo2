@@ -1,51 +1,57 @@
-// Copyright 2019 by Donald Wilson. All rights reserved.
-// Use of this source code is governed by an MIT
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"net"
 	"os"
-	"strconv"
+	"strings"
+	"time"
 
-	"github.com/rivo/tview"
+	"github.com/donaldww/ig"
 )
 
 func main() {
-	app := tview.NewApplication()
-
-	flx := tview.NewFlex()
-
-	form := newForm(app)
-
-	flx.AddItem(form, 0, 1, true)
-
-	if err := app.SetRoot(flx, true).Run(); err != nil {
+	CONNECT := ig.NewConfig("iproto_config").GetString("TCPconnect")
+	
+	c, err := net.Dial("tcp", CONNECT)
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	os.Exit(0)
-}
+	myTime := time.Now().Format(time.RFC3339)
+	fmt.Println("precon version 0.1.0", myTime)
+	fmt.Println("Enter 'help' for usage hints.")
+	fmt.Println("Connected to IG17 demo server.")
 
-func newForm(app *tview.Application) *tview.Form {
-	f := tview.NewForm()
-	f.SetTitle(" PRE-CONSENSUS CHECK")
-
-	f.AddInputField("Amount:", "", 20, isValidAmount, nil)
-	f.AddButton("roger → pontius", nil)
-	f.AddButton("pontius → roger", nil)
-	f.AddButton("Quit", func() {
-		app.Stop()
-	})
-	return f
-}
-
-// isValidAmount only allows numbers into the field.
-func isValidAmount(text string, _ rune) bool {
-	_, err := strconv.Atoi(text)
-	if err != nil {
-		return false
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Print("precon> ")
+		text, _ := reader.ReadString('\n')
+		switch strings.TrimSpace(string(text)) {
+		case "quit", "q":
+			fmt.Println("TCP client exiting...")
+			os.Exit(0)
+		case "help", "h":
+			printHelp()
+			break
+		default:
+			// Send message to server.
+			_, _ = fmt.Fprintf(c, text+"\n")
+			// Receive message from server.
+			message, _ := bufio.NewReader(c).ReadString('\n')
+			// Print response.
+			fmt.Print("response> " + message)
+		}
 	}
-	return true
+}
+
+func printHelp() {
+	msg := `precon commands:
+"buy or sell" <amount>
+"reload" to replenish account
+"bal" to retrieve current balance
+"q or quit" to exit`
+
+	fmt.Println(msg)
 }
