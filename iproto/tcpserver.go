@@ -14,7 +14,23 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-func tcpServer(t *text.Text, loggerCH chan loggerMSG) {
+var openBalance = config.GetInt("openBal")
+var balance int
+
+// Draw and redraw the pre-consensus account.
+func reload(t *text.Text) {
+	balance = openBalance
+	update(t)
+}
+
+func update(t *text.Text) {
+	t.Reset()
+	writeColorf(t, cell.ColorCyan, "\n Balance: ")
+	writeColorf(t, cell.ColorRed, "%d", balance)
+}
+
+func tcpServer(t *text.Text, b *text.Text, loggerCH chan loggerMSG) {
+	reload(b)
 	PORT := ig.NewConfig("iproto_config").GetString("TCPconnect")
 	l, err := net.Listen("tcp", PORT)
 	if err != nil {
@@ -30,18 +46,18 @@ WAITING:
 	c, err := l.Accept()
 	if err != nil {
 		t.Reset()
-		loggerCH <- loggerMSG{"Problem with client connection...", cell.ColorYellow}
+		loggerCH <- loggerMSG{"Problem with client connection.", cell.ColorYellow}
 		goto WAITING
 	}
 
 	t.Reset()
-	loggerCH <- loggerMSG{"Client connected...", cell.ColorYellow}
+	loggerCH <- loggerMSG{"Client connected.", cell.ColorYellow}
 
 	for {
 		netData, thisErr := bufio.NewReader(c).ReadString('\n')
 		if thisErr == io.EOF {
 			t.Reset()
-			loggerCH <- loggerMSG{"Client connection closed...", cell.ColorYellow}
+			loggerCH <- loggerMSG{"Client connection closed.", cell.ColorYellow}
 			goto WAITING
 		}
 		// '\n' must be trimmed from netData because ReadString() doesn't strip
@@ -56,31 +72,45 @@ WAITING:
 				break
 			}
 			switch cmd[0] {
-			case "buy":
-				logMsg := fmt.Sprintf("%s -> %d IC", cmd[0], amt)
-				t.Reset()
-				loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
-				_, _ = c.Write([]byte("iproto: bought coins.\n"))
 			case "sell":
-				logMsg := fmt.Sprintf("%s -> %d IC", cmd[0], amt)
-				t.Reset()
-				loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
-				_, _ = c.Write([]byte("iproto: you sold coins.\n"))
+				if balance-amt < 0 {
+					_, _ = c.Write([]byte("iproto: trade blocked: insufficient funds!\n"))
+					logMsg := fmt.Sprintf("%s order: %d IC: BLOCKED!", cmd[0], amt)
+					t.Reset(); loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorRed}
+				} else {
+					balance -= amt
+					update(b)
+					logMsg := fmt.Sprintf("%s order: %d IC.", cmd[0], amt)
+					t.Reset(); loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
+					logMsg = fmt.Sprintf("iproto: sold: %d coins.\n", amt)
+					_, _ = c.Write([]byte(logMsg))
+				}
+			case "buy":
+				balance += amt
+				update(b)
+				logMsg := fmt.Sprintf("%s order: %d IC.", cmd[0], amt)
+				t.Reset(); loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
+				logMsg = fmt.Sprintf("iproto: bought: %d coins.\n", amt)
+				_, _ = c.Write([]byte(logMsg))
 			default:
-				_, _ = c.Write([]byte("iproto: invalid command: must be 'buy' or 'sell'\n"))
+				_, _ = c.Write([]byte("iproto: invalid command: must be 'buy' or 'sell'.\n"))
 
 			}
 		case 1:
 			switch cmd[0] {
 			case "bal":
-				_, _ = c.Write([]byte("iproto: current balance is ... .\n"))
+				msg := fmt.Sprintf("iproto: current balance: %d IC.\n", balance)
+				_, _ = c.Write([]byte(msg))
 			case "reload":
+				reload(b)
+				t.Reset(); loggerCH <- loggerMSG{msg: "reload.",
+					color: cell.ColorYellow}
 				_, _ = c.Write([]byte("iproto: account reloaded.\n"))
 			default:
 				_, _ = c.Write([]byte("iproto: invalid command.\n"))
 			}
 		default:
-			_, _ = c.Write([]byte("iproto: too many arguments.\n"))
+			_, _ = c.Write([]byte("iproto: too many parameters.\n"))
 		}
 	}
 }

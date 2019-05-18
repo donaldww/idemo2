@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-
+	
 	"github.com/donaldww/ig"
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
@@ -18,10 +18,9 @@ import (
 	"github.com/mum4k/termdash/linestyle"
 	"github.com/mum4k/termdash/terminal/termbox"
 	"github.com/mum4k/termdash/terminal/terminalapi"
-	"github.com/mum4k/termdash/widgets/button"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-
+	
 	"github.com/donaldww/idemo/internal/consensus"
 )
 
@@ -29,7 +28,7 @@ import (
 type playType int
 
 const (
-	version                  = "v0.6.0"
+	version                  = "v0.7.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
@@ -40,7 +39,8 @@ var (
 )
 
 var (
-	buttonHeight = config.GetInt("buttonHeight")
+	//TODO: remove buttonHeight from iproto_config
+	// buttonHeight = config.GetInt("buttonHeight")
 
 	// Relative sizes of windows
 	gaugeConsensus      = config.GetInt("gaugeConsensus")
@@ -157,13 +157,7 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 	}
 }
 
-// Draw and redraw the pre-consensus account.
-func reload(t *text.Text) {
-	balance := config.GetInt("openBal")
-	t.Reset()
-	writeColorf(t, cell.ColorCyan, "\n Balance: ")
-	writeColorf(t, cell.ColorRed, "%d", balance)
-}
+
 
 func main() {
 	var err error
@@ -191,15 +185,15 @@ func main() {
 		panic(err)
 	}
 
-	// reloadB is a button that will reload the account with starting balance.
-	reloadB, err := button.New("Reload", func() error {
-		reload(balanceWindow)
-		return nil
-	},
-		button.Height(buttonHeight),
-		button.WidthFor("Submit"),
-		button.FillColor(cell.ColorNumber(220)),
-	)
+	// // reloadB is a button that will reload the account with starting balance.
+	// reloadB, err := button.New("Reload", func() error {
+	// 	reload(balanceWindow)
+	// 	return nil
+	// },
+	// 	button.Height(buttonHeight),
+	// 	button.WidthFor("Submit"),
+	// 	button.FillColor(cell.ColorNumber(220)),
+	// )
 
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
@@ -261,15 +255,16 @@ func main() {
 											" Account: "+config.GetString("accountID")+" "),
 										cr.SplitHorizontal(
 											cr.Top(
-												cr.SplitVertical(
-													cr.Left(
-														cr.PlaceWidget(balanceWindow),
-													),
-													cr.Right(
-														cr.PlaceWidget(reloadB),
-													),
-													cr.SplitPercent(70),
-												),
+												// cr.SplitVertical(
+												// 	cr.Left(
+												// 		cr.PlaceWidget(balanceWindow),
+												// 	),
+												// 	cr.Right(
+												// 		cr.PlaceWidget(reloadB),
+												// 	),
+												// 	cr.SplitPercent(70),
+												// ),
+												cr.PlaceWidget(balanceWindow),
 											),
 											cr.Bottom(
 												cr.PlaceWidget(balanceLogger),
@@ -323,10 +318,10 @@ func main() {
 	go enclaveScan(loggerCH)
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
-	go preconScan(loggerCH2)
-	go tcpServer(balanceLogger, loggerCH2)
+	// go preconScan(loggerCH2)
+	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
 
-	reload(balanceWindow)
+	
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
