@@ -14,7 +14,7 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-var openBalance = config.GetInt("openBal")
+var openBalance = cf.GetInt("openBal")
 var balance int
 
 // Draw and redraw the pre-consensus account.

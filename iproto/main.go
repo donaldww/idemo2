@@ -10,8 +10,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-
-	"github.com/donaldww/ig"
+	
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	cr "github.com/mum4k/termdash/container"
@@ -20,8 +19,10 @@ import (
 	"github.com/mum4k/termdash/terminal/terminalapi"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-
+	
+	"github.com/donaldww/idemo/internal/conf"
 	"github.com/donaldww/idemo/internal/consensus"
+	"github.com/donaldww/idemo/internal/env"
 )
 
 // playType indicates how to play a gauge.
@@ -34,33 +35,33 @@ const (
 )
 
 var (
-	config       = ig.NewConfig("iproto_config")
+	cf           = conf.NewConfig("iproto_config", env.Config())
 	waitForGauge = make(chan bool)
 )
 
 var (
 	// Relative sizes of windows
-	gaugeConsensus      = config.GetInt("gaugeConsensus")
-	consensusSGXmonitor = config.GetInt("consensusSGXmonitor")
-	inputBlock          = config.GetInt("inputBlock")
-	inputButtons        = config.GetInt("inputButtons")
+	gaugeConsensus      = cf.GetInt("gaugeConsensus")
+	consensusSGXmonitor = cf.GetInt("consensusSGXmonitor")
+	inputBlock          = cf.GetInt("inputBlock")
+	inputButtons        = cf.GetInt("inputButtons")
 
 	// Consensus widget
-	numberOfNodes     = config.GetInt("numberOfNodes")
-	numberOfMoneyBags = config.GetInt("numberOfMoneyBags")
-	consensusDelay    = config.GetMilliseconds("consensusDelay")
-	moneyBagsDelay    = config.GetMilliseconds("moneyBagsDelay")
+	numberOfNodes     = cf.GetInt("numberOfNodes")
+	numberOfMoneyBags = cf.GetInt("numberOfMoneyBags")
+	consensusDelay    = cf.GetMilliseconds("consensusDelay")
+	moneyBagsDelay    = cf.GetMilliseconds("moneyBagsDelay")
 
 	// Gauge widget
-	gaugeDelay    = config.GetMilliseconds("gaugeDelay")
-	endGaugeWait  = config.GetMilliseconds("endGaugeWait")
-	gaugeInterval = config.GetInt("gaugeInterval")
+	gaugeDelay    = cf.GetMilliseconds("gaugeDelay")
+	endGaugeWait  = cf.GetMilliseconds("endGaugeWait")
+	gaugeInterval = cf.GetInt("gaugeInterval")
 
-	maxTransactions = config.GetInt("maxTransactions")
-	randFactor      = config.GetInt("randFactor")
+	maxTransactions = cf.GetInt("maxTransactions")
+	randFactor      = cf.GetInt("randFactor")
 )
 
-//TODO: Implement auto-load function for config file values.
+//TODO: Implement auto-load function for cf file values.
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
@@ -236,7 +237,7 @@ func main() {
 										cr.Border(linestyle.Light),
 										cr.BorderColor(cell.ColorCyan),
 										cr.BorderTitle(
-											" Account: "+config.GetString("accountID")+" "),
+											" Account: "+cf.GetString("accountID")+" "),
 										cr.SplitHorizontal(
 											cr.Top(
 												cr.PlaceWidget(balanceWindow),

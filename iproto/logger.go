@@ -23,7 +23,7 @@ type loggerMSG struct {
 // writeLogger logs messages into the SGX monitor widget.
 func writeLogger(_ context.Context, t *text.Text, loggerCH chan loggerMSG) {
 	counter := 0
-	loggerRefresh := config.GetInt("loggerRefresh")
+	loggerRefresh := cf.GetInt("loggerRefresh")
 	for {
 		select {
 		case log := <-loggerCH:
@@ -46,7 +46,7 @@ func writeLogger(_ context.Context, t *text.Text, loggerCH chan loggerMSG) {
 }
 
 func enclaveScan(loggerCH chan loggerMSG) {
-	loggerDelay := config.GetMilliseconds("loggerDelay")
+	loggerDelay := cf.GetMilliseconds("loggerDelay")
 	for {
 		sgx.Scan()
 		if err := sgx.IsValid(); err != nil {

@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/donaldww/ig"
+	"github.com/donaldww/idemo/internal/conf"
+	"github.com/donaldww/idemo/internal/env"
 )
 
 func main() {
-	CONNECT := ig.NewConfig("iproto_config").GetString("TCPconnect")
+	CONNECT := conf.NewConfig("iproto_config", env.Config()).GetString("TCPconnect")
 
 	c, err := net.Dial("tcp", CONNECT)
 	if err != nil {
