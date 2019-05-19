@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-	
+
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	cr "github.com/mum4k/termdash/container"
@@ -19,7 +19,7 @@ import (
 	"github.com/mum4k/termdash/terminal/terminalapi"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-	
+
 	"github.com/donaldww/idemo/internal/conf"
 	"github.com/donaldww/idemo/internal/consensus"
 	"github.com/donaldww/idemo/internal/env"
@@ -29,7 +29,7 @@ import (
 type playType int
 
 const (
-	version                  = "v0.7.0"
+	version                  = "v0.8.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
