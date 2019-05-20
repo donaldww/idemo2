@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-// iproto runs a demostration of IG17 blockchain in operation.
+// iproto runs a demostration of IG17 bc in operation.
 package main
 
 import (
@@ -29,7 +29,7 @@ import (
 type playType int
 
 const (
-	version                  = "v0.8.0"
+	version                  = "v1.0.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
@@ -38,7 +38,7 @@ var (
 	waitForGauge = make(chan bool)
 
 	cf = conf.NewConfig("iproto_config", env.Config())
-	
+
 	// Relative size of windows
 	gaugeConsensus      = cf.GetInt("gaugeConsensus")
 	consensusSGXmonitor = cf.GetInt("consensusSGXmonitor")
@@ -61,7 +61,7 @@ var (
 )
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
-func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
+func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig chan string) {
 	var (
 		ctr = 0
 		ldr = ""
@@ -81,6 +81,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
 				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
 					ldr = x.Node
+					
 				}
 				err := t.Write(format)
 				if err != nil {
@@ -99,14 +100,16 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
 			break
 		}
 
-		writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
+		writeColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
-		writeColorf(t, cell.ColorRed, "--> \n")
+		writeColorf(t, cell.ColorRed, "-->\n ")
 
 		for i := 0; i < numberOfMoneyBags; i++ {
 			writeColorf(t, cell.ColorRed, "💰")
 			time.Sleep(moneyBagsDelay)
 		}
+		trig <- ldr
+
 	}
 }
 
@@ -116,12 +119,14 @@ func maxTransactionsAdjust() int {
 	return r1.Intn(randFactor)
 }
 
+var maxT int
+
 // playGauge continuously changes the displayed percent value on the
 // gauge by the step once every delay. Exits when the context expires.
 func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 	delay time.Duration, pt playType) {
 	prog := 0
-	var maxT = maxTransactions - maxTransactionsAdjust()
+	maxT = maxTransactions - maxTransactionsAdjust()
 
 	ticker := time.NewTicker(delay)
 	defer ticker.Stop()
@@ -195,7 +200,7 @@ func main() {
 	}
 
 	// Pre Consensus Transaction Monitor
-	blockWriteWindow, err := text.New(text.WrapAtWords())
+	blockWriteWindow, err := text.New(text.WrapAtWords(), text.RollContent())
 	if err != nil {
 		panic(err)
 	}
@@ -214,6 +219,7 @@ func main() {
 		t,
 		cr.Border(linestyle.Light),
 		cr.BorderColor(cell.ColorDefault),
+		cr.BorderTitleAlignCenter(),
 		cr.BorderTitle(title),
 		cr.SplitHorizontal(
 			cr.Top(
@@ -247,7 +253,7 @@ func main() {
 									),
 									cr.Bottom(
 										cr.Border(linestyle.Light),
-										cr.BorderTitle(" Block Monitor "),
+										cr.BorderTitle(" Blockchain Tail Monitor "),
 										cr.PlaceWidget(blockWriteWindow),
 									),
 									cr.SplitPercent(inputButtons),
@@ -275,23 +281,25 @@ func main() {
 	// GOROUTINES
 	// **********
 
+	var (
+		loggerCH  = make(chan loggerMSG, 10)
+		loggerCH2 = make(chan loggerMSG, 10)
+		blockCH   = make(chan string)
+	)
+
 	// Display randomly generated nodes in the 'consensusWindow'.
-	go writeConsensus(ctx, consensusWindow, consensusDelay)
+	go writeConsensus(ctx, consensusWindow, consensusDelay, blockCH)
 	// Play the transaction gathering gauge.
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay,
 		playTypeAbsolute)
 	// Logger
-
-	var (
-		loggerCH  = make(chan loggerMSG, 10)
-		loggerCH2 = make(chan loggerMSG, 10)
-	)
 
 	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
 	go enclaveScan(loggerCH)
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
 	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
+	go handleBlockchain(blockWriteWindow, blockCH)
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
