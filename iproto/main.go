@@ -29,7 +29,7 @@ import (
 type playType int
 
 const (
-	version                  = "v0.8.0"
+	version                  = "v1.0.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
@@ -61,7 +61,7 @@ var (
 )
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
-func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig chan bool) {
+func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig chan string) {
 	var (
 		ctr = 0
 		ldr = ""
@@ -81,6 +81,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
 					ldr = x.Node
+					
 				}
 				err := t.Write(format)
 				if err != nil {
@@ -99,7 +100,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 			break
 		}
 
-		writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
+		writeColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
 		writeColorf(t, cell.ColorRed, "-->\n ")
 
@@ -107,7 +108,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 			writeColorf(t, cell.ColorRed, "💰")
 			time.Sleep(moneyBagsDelay)
 		}
-		trig <- true
+		trig <- ldr
 
 	}
 }
@@ -118,12 +119,14 @@ func maxTransactionsAdjust() int {
 	return r1.Intn(randFactor)
 }
 
+var maxT int
+
 // playGauge continuously changes the displayed percent value on the
 // gauge by the step once every delay. Exits when the context expires.
 func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 	delay time.Duration, pt playType) {
 	prog := 0
-	var maxT = maxTransactions - maxTransactionsAdjust()
+	maxT = maxTransactions - maxTransactionsAdjust()
 
 	ticker := time.NewTicker(delay)
 	defer ticker.Stop()
@@ -250,7 +253,7 @@ func main() {
 									),
 									cr.Bottom(
 										cr.Border(linestyle.Light),
-										cr.BorderTitle(" Block Monitor "),
+										cr.BorderTitle(" Blockchain Tail Monitor "),
 										cr.PlaceWidget(blockWriteWindow),
 									),
 									cr.SplitPercent(inputButtons),
@@ -281,7 +284,7 @@ func main() {
 	var (
 		loggerCH  = make(chan loggerMSG, 10)
 		loggerCH2 = make(chan loggerMSG, 10)
-		blockCH   = make(chan bool)
+		blockCH   = make(chan string)
 	)
 
 	// Display randomly generated nodes in the 'consensusWindow'.

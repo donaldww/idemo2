@@ -24,9 +24,9 @@ func NewGroup(nuNodes int) *[]nodeID {
 	leader := randLeader(len(list))
 	for key, node := range list {
 		if key == leader {
-			consGrp = append(consGrp, nodeID{ids[node], true})
+			consGrp = append(consGrp, nodeID{NodeIds[node], true})
 		} else {
-			consGrp = append(consGrp, nodeID{ids[node], false})
+			consGrp = append(consGrp, nodeID{NodeIds[node], false})
 		}
 	}
 	return &consGrp
@@ -46,7 +46,7 @@ func randLeader(n int) int {
 
 // Returns an array of random numbers of 'n' length.
 func randList(n int) []int {
-	max := len(ids)
+	max := len(NodeIds)
 	result := make([]int, n)
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)

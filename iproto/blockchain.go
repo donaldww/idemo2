@@ -7,21 +7,22 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"log"
-	"math/rand"
 	"time"
-
+	
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
+	"github.com/nu7hatch/gouuid"
 )
 
 // Block represents each 'item' in the bc
 type Block struct {
-	Index     int
-	Timestamp string
-	Amount    int
-	Hash      string
-	PrevHash  string
+	Hash                 string
+	Timestamp            string
+	ConsensusLeader      string
+	Data                 string
+	NumberOfTransactions int
+	Nonce                int
+	PrevHash             string
 }
 
 // Blockchain is a series of validated Blocks
@@ -29,65 +30,76 @@ var bc []Block
 
 var tWindow *text.Text
 
+var flag = false
+
+var leader string
+
+// A counter.
+var __ci int
+var count = func() int {
+	__ci++
+	return __ci
+}
+
 // bDump logs messages into the SGX monitor widget.
 func bDump(b []Block) {
-	tWindow.Reset()
-	for x := range b {
-		writeColorf(tWindow, cell.ColorDefault, "%#v\n", b[x])
+	i := count() - 1
+	if i%9 == 0 {
+		tWindow.Reset()
 	}
+	var color cell.Color
+
+	if flag {
+		color = cell.ColorMagenta
+	} else {
+		color = cell.ColorDefault
+	}
+	writeColorf(tWindow, cell.ColorRed, " 💰")
+	writeColorf(tWindow, color, " %#v\n", b[i])
+	flag = !flag
+
+	// }
 }
 
 // handleBlockchain is the main point of for the blockchain window.
-func handleBlockchain(t *text.Text, trig chan bool) {
+func handleBlockchain(t *text.Text, trig chan string) {
 	tWindow = t
 
 	// Create genesis block.
 	tm := time.Now()
-	genesisBlock := Block{0, tm.String(), 0, "", ""}
+	genesisBlock := Block{Nonce: 0, Timestamp: tm.String(),
+		Data: "", NumberOfTransactions: 0, Hash: "", PrevHash: "",
+		ConsensusLeader: "GENESIS BLOCK"}
 	bc = append(bc, genesisBlock)
 
 	// Dump genesis block.
 	bDump(bc)
 
 	for {
-		switch {
-		case <-trig:
-			go handleBlocks()
+		pm := maxT
+		leader = <-trig
+		if leader != "" {
+			go handleBlocks(pm)
 		}
 	}
 }
 
-func handleBlocks() {
+func handleBlocks(trans int) {
 
-	for _, y := range newTransactions(1) {
-		newBlock, err := generateBlock(bc[len(bc)-1], y)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		if isBlockValid(newBlock, bc[len(bc)-1]) {
-			newBlockchain := append(bc, newBlock)
-			replaceChain(newBlockchain)
-		}
+	newBlock, err := generateBlock(bc[len(bc)-1], trans)
+	if err != nil {
+		panic(err)
+	}
+	if isBlockValid(newBlock, bc[len(bc)-1]) {
+		newBlockchain := append(bc, newBlock)
+		replaceChain(newBlockchain)
 	}
 	bDump(bc)
 }
 
-func newTransactions(n int) []int {
-	max := 5000
-	result := make([]int, n)
-	s1 := rand.NewSource(time.Now().UnixNano())
-	r1 := rand.New(s1)
-
-	for i := 0; i < n; i++ {
-		result[i] = r1.Intn(max) + 1
-	}
-	return result
-}
-
 // make sure block is valid by checking index, and comparing the hash of the previous block
 func isBlockValid(newBlock, oldBlock Block) bool {
-	if oldBlock.Index+1 != newBlock.Index {
+	if oldBlock.Nonce+1 != newBlock.Nonce {
 		return false
 	}
 
@@ -112,7 +124,7 @@ func replaceChain(newBlocks []Block) {
 
 // SHA256 hasing
 func calculateHash(block Block) string {
-	record := string(block.Index) + block.Timestamp + string(block.Amount) + block.PrevHash
+	record := string(block.Nonce) + block.Timestamp + string(block.NumberOfTransactions) + block.PrevHash
 	h := sha256.New()
 	h.Write([]byte(record))
 	hashed := h.Sum(nil)
@@ -126,9 +138,27 @@ func generateBlock(oldBlock Block, amount int) (Block, error) {
 
 	t := time.Now()
 
-	newBlock.Index = oldBlock.Index + 1
+	// var s string
+	//
+	// c := consensus.CurrentGroup()
+	//
+	// for i , y := range *c {
+	// 	if y.IsLeader {
+	// 		s = consensus.NodeIds[i]
+	// 		break
+	// 	}
+	// }
+
+	u3, err := uuid.NewV3(uuid.NamespaceURL, []byte(leader))
+	if err != nil {
+		panic(err)
+	}
+
+	newBlock.Nonce = oldBlock.Nonce + 1
 	newBlock.Timestamp = t.String()
-	newBlock.Amount = amount
+	newBlock.ConsensusLeader = leader
+	newBlock.Data = u3.String()
+	newBlock.NumberOfTransactions = amount
 	newBlock.PrevHash = oldBlock.Hash
 	newBlock.Hash = calculateHash(newBlock)
 

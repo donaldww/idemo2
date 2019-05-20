@@ -1,7 +1,7 @@
 package consensus
 
-// ids is a list of 500 ids that represent blockchain consGrp.
-var ids = []string{
+// NodeIds is a list of 500 NodeIds that represent blockchain consGrp.
+var NodeIds = []string{
 	"joshua.powell, 22.73.73.134",
 	"lily.roberts, 23.155.216.60",
 	"melanie.hodges, 21.248.245.133",
