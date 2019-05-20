@@ -99,8 +99,8 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 		case <-waitForGauge:
 			break
 		}
-
-		writeColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS")
+		
+		writeColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS ")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
 		writeColorf(t, cell.ColorRed, "-->\n ")
 
