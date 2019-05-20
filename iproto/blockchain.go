@@ -5,21 +5,17 @@
 package main
 
 import (
-	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
-	"io"
 	"log"
-	"net"
-	"strconv"
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/mum4k/termdash/cell"
+	"github.com/mum4k/termdash/widgets/text"
 )
 
-// Block represents each 'item' in the blockchain
+// Block represents each 'item' in the bc
 type Block struct {
 	Index     int
 	Timestamp string
@@ -29,76 +25,56 @@ type Block struct {
 }
 
 // Blockchain is a series of validated Blocks
-var blockchain []Block
+var bc []Block
 
 // bcServer handles incoming concurrent Blocks
 var bcServer chan []Block
 var mutex = &sync.Mutex{}
+var tWindow *text.Text
 
-// Old Main
+// bDump logs messages into the SGX monitor widget.
+func bDump(b []Block) {
+	for x := range b {
+		writeColorf(tWindow, cell.ColorDefault, "%v\n", x)
+	}
+}
 
-// func main() {
-// 	err := godotenv.Load()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-//
-// 	bcServer = make(chan []Block)
-//
-// 	// create genesis block
-// 	t := time.Now()
-// 	genesisBlock := Block{0, t.String(), 0, "", ""}
-// 	spew.Dump(genesisBlock)
-// 	blockchain = append(blockchain, genesisBlock)
-//
-// 	httpPort := os.Getenv("PORT")
-//
-// 	// start TCP and serve TCP server
-// 	server, err := net.Listen("tcp", ":"+httpPort)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	log.Println("HTTP Server Listening on port :", httpPort)
-// 	defer server.Close()
-//
-// 	for {
-// 		conn, thisErr := server.Accept()
-// 		if thisErr != nil {
-// 			log.Fatal(thisErr)
-// 		}
-// 		go handleConn(conn)
-// 	}
-//
-// }
+func handleBlockchain(t *text.Text) {
+	bcServer = make(chan []Block)
+	tWindow = t
 
-func handleConn(conn net.Conn) {
+	// Create genesis block.
+	tm := time.Now()
+	genesisBlock := Block{0, tm.String(), 0, "", ""}
+	bc = append(bc, genesisBlock)
 
-	defer conn.Close()
+	// Dump genesis block.
+	bDump(bc)
 
-	_, _ = io.WriteString(conn, "Enter a new BPM:")
+	for {
 
-	scanner := bufio.NewScanner(conn)
+		//TODO: add any captured transactions here
+		// and generate a list of transactions.
 
-	// take in BPM from stdin and add it to blockchain after conducting necessary validation
+		go handleConn()
+	}
+}
+
+func handleConn() {
 	go func() {
-		for scanner.Scan() {
-			bpm, err := strconv.Atoi(scanner.Text())
-			if err != nil {
-				log.Printf("%v not a number: %v", scanner.Text(), err)
-				continue
-			}
-			newBlock, err := generateBlock(blockchain[len(blockchain)-1], bpm)
+		x := newTransactions()
+		for i := range x {
+			newBlock, err := generateBlock(bc[len(bc)-1], i)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
-			if isBlockValid(newBlock, blockchain[len(blockchain)-1]) {
-				newBlockchain := append(blockchain, newBlock)
+			if isBlockValid(newBlock, bc[len(bc)-1]) {
+				newBlockchain := append(bc, newBlock)
 				replaceChain(newBlockchain)
 			}
 
-			bcServer <- blockchain
-			_, _ = io.WriteString(conn, "\nEnter a new BPM:")
+			bcServer <- bc
 		}
 	}()
 
@@ -107,19 +83,21 @@ func handleConn(conn net.Conn) {
 		for {
 			time.Sleep(30 * time.Second)
 			mutex.Lock()
-			output, err := json.Marshal(blockchain)
-			if err != nil {
-				log.Fatal(err)
-			}
+			// output, err := json.Marshal(bc)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
 			mutex.Unlock()
-			_, _ = io.WriteString(conn, string(output))
+			bDump(bc)
 		}
 	}()
+}
 
-	for range bcServer {
-		spew.Dump(blockchain)
+func newTransactions() (t []int) {
+	for x := 0; x < numberOfNodes; x++ {
+		t = append(t, 3)
 	}
-
+	return
 }
 
 // make sure block is valid by checking index, and comparing the hash of the previous block
@@ -139,11 +117,11 @@ func isBlockValid(newBlock, oldBlock Block) bool {
 	return true
 }
 
-// make sure the chain we're checking is longer than the current blockchain
+// make sure the chain we're checking is longer than the current bc
 func replaceChain(newBlocks []Block) {
 	mutex.Lock()
-	if len(newBlocks) > len(blockchain) {
-		blockchain = newBlocks
+	if len(newBlocks) > len(bc) {
+		bc = newBlocks
 	}
 	mutex.Unlock()
 }

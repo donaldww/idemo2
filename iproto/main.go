@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-// iproto runs a demostration of IG17 blockchain in operation.
+// iproto runs a demostration of IG17 bc in operation.
 package main
 
 import (
@@ -38,7 +38,7 @@ var (
 	waitForGauge = make(chan bool)
 
 	cf = conf.NewConfig("iproto_config", env.Config())
-	
+
 	// Relative size of windows
 	gaugeConsensus      = cf.GetInt("gaugeConsensus")
 	consensusSGXmonitor = cf.GetInt("consensusSGXmonitor")
@@ -213,7 +213,9 @@ func main() {
 	c, err := cr.New(
 		t,
 		cr.Border(linestyle.Light),
+		cr.Border(linestyle.Light),
 		cr.BorderColor(cell.ColorDefault),
+		cr.BorderTitleAlignCenter(),
 		cr.BorderTitle(title),
 		cr.SplitHorizontal(
 			cr.Top(
@@ -224,7 +226,6 @@ func main() {
 					cr.Top(
 						cr.SplitVertical(
 							cr.Left(
-								cr.Border(linestyle.Light),
 								cr.BorderTitle(" Consensus Group Randomizer "),
 								cr.PlaceWidget(consensusWindow),
 							),
@@ -292,6 +293,7 @@ func main() {
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
 	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
+	// go handleBlockchain(blockWriteWindow)
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
