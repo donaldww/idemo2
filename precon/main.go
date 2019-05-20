@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -13,8 +14,19 @@ import (
 )
 
 func main() {
-	CONNECT := conf.NewConfig("iproto_config", env.Config()).GetString("TCPconnect")
-
+	negI := flag.String("i", "localhost", "Optional IP address")
+	flag.Parse()
+	
+	CONNECT := func() string {
+		i := conf.NewConfig("iproto_config", env.Config())
+		if *negI != "localhost" {
+			return *negI + ":" + i.GetString("TCPport")
+		} else {
+			return i.GetString("TCPconnect")
+		}
+	}()
+	
+	
 	c, err := net.Dial("tcp", CONNECT)
 	if err != nil {
 		fmt.Println(err)
