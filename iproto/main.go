@@ -61,7 +61,7 @@ var (
 )
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
-func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
+func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig chan bool) {
 	var (
 		ctr = 0
 		ldr = ""
@@ -101,12 +101,14 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
 
 		writeColorf(t, cell.ColorBlue, "\n WRITING BLOCK ")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
-		writeColorf(t, cell.ColorRed, "--> \n")
+		writeColorf(t, cell.ColorRed, "-->\n ")
 
 		for i := 0; i < numberOfMoneyBags; i++ {
 			writeColorf(t, cell.ColorRed, "💰")
 			time.Sleep(moneyBagsDelay)
 		}
+		trig <- true
+
 	}
 }
 
@@ -213,7 +215,6 @@ func main() {
 	c, err := cr.New(
 		t,
 		cr.Border(linestyle.Light),
-		cr.Border(linestyle.Light),
 		cr.BorderColor(cell.ColorDefault),
 		cr.BorderTitleAlignCenter(),
 		cr.BorderTitle(title),
@@ -226,6 +227,7 @@ func main() {
 					cr.Top(
 						cr.SplitVertical(
 							cr.Left(
+								cr.Border(linestyle.Light),
 								cr.BorderTitle(" Consensus Group Randomizer "),
 								cr.PlaceWidget(consensusWindow),
 							),
@@ -276,24 +278,25 @@ func main() {
 	// GOROUTINES
 	// **********
 
+	var (
+		loggerCH  = make(chan loggerMSG, 10)
+		loggerCH2 = make(chan loggerMSG, 10)
+		blockCH   = make(chan bool)
+	)
+
 	// Display randomly generated nodes in the 'consensusWindow'.
-	go writeConsensus(ctx, consensusWindow, consensusDelay)
+	go writeConsensus(ctx, consensusWindow, consensusDelay, blockCH)
 	// Play the transaction gathering gauge.
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay,
 		playTypeAbsolute)
 	// Logger
-
-	var (
-		loggerCH  = make(chan loggerMSG, 10)
-		loggerCH2 = make(chan loggerMSG, 10)
-	)
 
 	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
 	go enclaveScan(loggerCH)
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
 	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
-	go handleBlockchain(blockWriteWindow)
+	go handleBlockchain(blockWriteWindow, blockCH)
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {

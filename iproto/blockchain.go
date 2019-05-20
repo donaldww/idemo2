@@ -8,7 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"log"
-	"sync"
+	"math/rand"
 	"time"
 
 	"github.com/mum4k/termdash/cell"
@@ -19,7 +19,7 @@ import (
 type Block struct {
 	Index     int
 	Timestamp string
-	BPM       int
+	Amount    int
 	Hash      string
 	PrevHash  string
 }
@@ -27,20 +27,18 @@ type Block struct {
 // Blockchain is a series of validated Blocks
 var bc []Block
 
-// bcServer handles incoming concurrent Blocks
-var bcServer chan []Block
-var mutex = &sync.Mutex{}
 var tWindow *text.Text
 
 // bDump logs messages into the SGX monitor widget.
 func bDump(b []Block) {
+	tWindow.Reset()
 	for x := range b {
-		writeColorf(tWindow, cell.ColorDefault, "%v\n", x)
+		writeColorf(tWindow, cell.ColorDefault, "%#v\n", b[x])
 	}
 }
 
-func handleBlockchain(t *text.Text) {
-	bcServer = make(chan []Block)
+// handleBlockchain is the main point of for the blockchain window.
+func handleBlockchain(t *text.Text, trig chan bool) {
 	tWindow = t
 
 	// Create genesis block.
@@ -52,49 +50,39 @@ func handleBlockchain(t *text.Text) {
 	bDump(bc)
 
 	for {
-		go handleConn()
-		time.Sleep(2 * time.Second)
+		switch {
+		case <-trig:
+			go handleBlocks()
+		}
 	}
 }
 
-func handleConn() {
-	go func() {
-		x := newTransactions()
-		for i := range x {
-			newBlock, err := generateBlock(bc[len(bc)-1], i)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			if isBlockValid(newBlock, bc[len(bc)-1]) {
-				newBlockchain := append(bc, newBlock)
-				replaceChain(newBlockchain)
-			}
+func handleBlocks() {
 
-			bcServer <- bc
+	for _, y := range newTransactions(1) {
+		newBlock, err := generateBlock(bc[len(bc)-1], y)
+		if err != nil {
+			log.Println(err)
+			continue
 		}
-	}()
-
-	// simulate receiving broadcast
-	go func() {
-		for {
-			time.Sleep(30 * time.Second)
-			mutex.Lock()
-			// output, err := json.Marshal(bc)
-			// if err != nil {
-			// 	log.Fatal(err)
-			// }
-			mutex.Unlock()
-			bDump(bc)
+		if isBlockValid(newBlock, bc[len(bc)-1]) {
+			newBlockchain := append(bc, newBlock)
+			replaceChain(newBlockchain)
 		}
-	}()
+	}
+	bDump(bc)
 }
 
-func newTransactions() (t []int) {
-	for x := 0; x < numberOfNodes; x++ {
-		t = append(t, 3)
+func newTransactions(n int) []int {
+	max := 5000
+	result := make([]int, n)
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+
+	for i := 0; i < n; i++ {
+		result[i] = r1.Intn(max) + 1
 	}
-	return
+	return result
 }
 
 // make sure block is valid by checking index, and comparing the hash of the previous block
@@ -116,16 +104,15 @@ func isBlockValid(newBlock, oldBlock Block) bool {
 
 // make sure the chain we're checking is longer than the current bc
 func replaceChain(newBlocks []Block) {
-	mutex.Lock()
+
 	if len(newBlocks) > len(bc) {
 		bc = newBlocks
 	}
-	mutex.Unlock()
 }
 
 // SHA256 hasing
 func calculateHash(block Block) string {
-	record := string(block.Index) + block.Timestamp + string(block.BPM) + block.PrevHash
+	record := string(block.Index) + block.Timestamp + string(block.Amount) + block.PrevHash
 	h := sha256.New()
 	h.Write([]byte(record))
 	hashed := h.Sum(nil)
@@ -133,7 +120,7 @@ func calculateHash(block Block) string {
 }
 
 // create a new block using previous block's hash
-func generateBlock(oldBlock Block, BPM int) (Block, error) {
+func generateBlock(oldBlock Block, amount int) (Block, error) {
 
 	var newBlock Block
 
@@ -141,7 +128,7 @@ func generateBlock(oldBlock Block, BPM int) (Block, error) {
 
 	newBlock.Index = oldBlock.Index + 1
 	newBlock.Timestamp = t.String()
-	newBlock.BPM = BPM
+	newBlock.Amount = amount
 	newBlock.PrevHash = oldBlock.Hash
 	newBlock.Hash = calculateHash(newBlock)
 
