@@ -17,7 +17,7 @@ import (
 var openBalance = cf.GetInt("openBal")
 var balance int
 
-// Draw and redraw the pre-consensus account.
+// Reset the balance before updating the balance window.
 func reload(t *text.Text) {
 	balance = openBalance
 	update(t)

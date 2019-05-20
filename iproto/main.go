@@ -35,24 +35,23 @@ const (
 )
 
 var (
-	cf           = conf.NewConfig("iproto_config", env.Config())
 	waitForGauge = make(chan bool)
-)
 
-var (
-	// Relative sizes of windows
+	cf = conf.NewConfig("iproto_config", env.Config())
+	
+	// Relative size of windows
 	gaugeConsensus      = cf.GetInt("gaugeConsensus")
 	consensusSGXmonitor = cf.GetInt("consensusSGXmonitor")
 	inputBlock          = cf.GetInt("inputBlock")
 	inputButtons        = cf.GetInt("inputButtons")
 
-	// Consensus widget
+	// Consensus window.
 	numberOfNodes     = cf.GetInt("numberOfNodes")
 	numberOfMoneyBags = cf.GetInt("numberOfMoneyBags")
 	consensusDelay    = cf.GetMilliseconds("consensusDelay")
 	moneyBagsDelay    = cf.GetMilliseconds("moneyBagsDelay")
 
-	// Gauge widget
+	// Gauge window
 	gaugeDelay    = cf.GetMilliseconds("gaugeDelay")
 	endGaugeWait  = cf.GetMilliseconds("endGaugeWait")
 	gaugeInterval = cf.GetInt("gaugeInterval")
@@ -60,8 +59,6 @@ var (
 	maxTransactions = cf.GetInt("maxTransactions")
 	randFactor      = cf.GetInt("randFactor")
 )
-
-//TODO: Implement auto-load function for cf file values.
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
@@ -191,7 +188,7 @@ func main() {
 		gauge.Height(1),
 		gauge.Color(cell.ColorBlue),
 		gauge.Border(linestyle.Light),
-		gauge.BorderTitle(" Collecting Infinicoin Transactions "),
+		gauge.BorderTitle(" Collecting Infinicoin Trades "),
 	)
 	if err != nil {
 		panic(err)
@@ -210,7 +207,7 @@ func main() {
 		panic(err)
 	}
 
-	title := fmt.Sprintf(" IG17 DEMO %s - PRESS Q TO QUIT ", version)
+	title := fmt.Sprintf(" IG17 BLOCKCHAIN DEMO %s - PRESS Q TO QUIT ", version)
 
 	// Container Layout.
 	c, err := cr.New(
@@ -228,7 +225,7 @@ func main() {
 						cr.SplitVertical(
 							cr.Left(
 								cr.Border(linestyle.Light),
-								cr.BorderTitle(" IG17 Consensus Group Randomizer "),
+								cr.BorderTitle(" Consensus Group Randomizer "),
 								cr.PlaceWidget(consensusWindow),
 							),
 							cr.Right(
