@@ -10,8 +10,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-	
-	"github.com/donaldww/ig"
+
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	cr "github.com/mum4k/termdash/container"
@@ -20,51 +19,46 @@ import (
 	"github.com/mum4k/termdash/terminal/terminalapi"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-	
+
+	"github.com/donaldww/idemo/internal/conf"
 	"github.com/donaldww/idemo/internal/consensus"
+	"github.com/donaldww/idemo/internal/env"
 )
 
 // playType indicates how to play a gauge.
 type playType int
 
 const (
-	version                  = "v0.7.0"
+	version                  = "v0.8.0"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
 
 var (
-	config       = ig.NewConfig("iproto_config")
 	waitForGauge = make(chan bool)
+
+	cf = conf.NewConfig("iproto_config", env.Config())
+	
+	// Relative size of windows
+	gaugeConsensus      = cf.GetInt("gaugeConsensus")
+	consensusSGXmonitor = cf.GetInt("consensusSGXmonitor")
+	inputBlock          = cf.GetInt("inputBlock")
+	inputButtons        = cf.GetInt("inputButtons")
+
+	// Consensus window.
+	numberOfNodes     = cf.GetInt("numberOfNodes")
+	numberOfMoneyBags = cf.GetInt("numberOfMoneyBags")
+	consensusDelay    = cf.GetMilliseconds("consensusDelay")
+	moneyBagsDelay    = cf.GetMilliseconds("moneyBagsDelay")
+
+	// Gauge window
+	gaugeDelay    = cf.GetMilliseconds("gaugeDelay")
+	endGaugeWait  = cf.GetMilliseconds("endGaugeWait")
+	gaugeInterval = cf.GetInt("gaugeInterval")
+
+	maxTransactions = cf.GetInt("maxTransactions")
+	randFactor      = cf.GetInt("randFactor")
 )
-
-var (
-	//TODO: remove buttonHeight from iproto_config
-	// buttonHeight = config.GetInt("buttonHeight")
-
-	// Relative sizes of windows
-	gaugeConsensus      = config.GetInt("gaugeConsensus")
-	consensusSGXmonitor = config.GetInt("consensusSGXmonitor")
-	inputBlock          = config.GetInt("inputBlock")
-	inputButtons        = config.GetInt("inputButtons")
-
-	// Consensus widget
-	numberOfNodes     = config.GetInt("numberOfNodes")
-	numberOfMoneyBags = config.GetInt("numberOfMoneyBags")
-	consensusDelay    = config.GetMilliseconds("consensusDelay")
-	moneyBagsDelay    = config.GetMilliseconds("moneyBagsDelay")
-
-	// Gauge widget
-	gaugeDelay    = config.GetMilliseconds("gaugeDelay")
-	endGaugeWait  = config.GetMilliseconds("endGaugeWait")
-	gaugeInterval = config.GetInt("gaugeInterval")
-
-	maxTransactions = config.GetInt("maxTransactions")
-	randFactor      = config.GetInt("randFactor")
-)
-
-//TODO: Implement auto-load function for config file values.
-//TODO: Add pre-consensus check into the remaining two windows.
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration) {
@@ -157,8 +151,6 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 	}
 }
 
-
-
 func main() {
 	var err error
 
@@ -185,16 +177,6 @@ func main() {
 		panic(err)
 	}
 
-	// // reloadB is a button that will reload the account with starting balance.
-	// reloadB, err := button.New("Reload", func() error {
-	// 	reload(balanceWindow)
-	// 	return nil
-	// },
-	// 	button.Height(buttonHeight),
-	// 	button.WidthFor("Submit"),
-	// 	button.FillColor(cell.ColorNumber(220)),
-	// )
-
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
@@ -206,7 +188,7 @@ func main() {
 		gauge.Height(1),
 		gauge.Color(cell.ColorBlue),
 		gauge.Border(linestyle.Light),
-		gauge.BorderTitle(" Collecting Infinicoin Transactions "),
+		gauge.BorderTitle(" Collecting Infinicoin Trades "),
 	)
 	if err != nil {
 		panic(err)
@@ -225,7 +207,7 @@ func main() {
 		panic(err)
 	}
 
-	title := fmt.Sprintf(" IG17 DEMO %s - PRESS Q TO QUIT ", version)
+	title := fmt.Sprintf(" IG17 BLOCKCHAIN DEMO %s - PRESS Q TO QUIT ", version)
 
 	// Container Layout.
 	c, err := cr.New(
@@ -243,7 +225,7 @@ func main() {
 						cr.SplitVertical(
 							cr.Left(
 								cr.Border(linestyle.Light),
-								cr.BorderTitle(" IG17 Consensus Group Randomizer "),
+								cr.BorderTitle(" Consensus Group Randomizer "),
 								cr.PlaceWidget(consensusWindow),
 							),
 							cr.Right(
@@ -252,18 +234,9 @@ func main() {
 										cr.Border(linestyle.Light),
 										cr.BorderColor(cell.ColorCyan),
 										cr.BorderTitle(
-											" Account: "+config.GetString("accountID")+" "),
+											" Account: "+cf.GetString("accountID")+" "),
 										cr.SplitHorizontal(
 											cr.Top(
-												// cr.SplitVertical(
-												// 	cr.Left(
-												// 		cr.PlaceWidget(balanceWindow),
-												// 	),
-												// 	cr.Right(
-												// 		cr.PlaceWidget(reloadB),
-												// 	),
-												// 	cr.SplitPercent(70),
-												// ),
 												cr.PlaceWidget(balanceWindow),
 											),
 											cr.Bottom(
@@ -318,10 +291,7 @@ func main() {
 	go enclaveScan(loggerCH)
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
-	// go preconScan(loggerCH2)
 	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
-
-	
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {

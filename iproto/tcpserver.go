@@ -14,10 +14,10 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-var openBalance = config.GetInt("openBal")
+var openBalance = cf.GetInt("openBal")
 var balance int
 
-// Draw and redraw the pre-consensus account.
+// Reset the balance before updating the balance window.
 func reload(t *text.Text) {
 	balance = openBalance
 	update(t)
@@ -76,12 +76,14 @@ WAITING:
 				if balance-amt < 0 {
 					_, _ = c.Write([]byte("iproto: trade blocked: insufficient funds!\n"))
 					logMsg := fmt.Sprintf("%s order: %d IC: BLOCKED!", cmd[0], amt)
-					t.Reset(); loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorRed}
+					t.Reset()
+					loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorRed}
 				} else {
 					balance -= amt
 					update(b)
 					logMsg := fmt.Sprintf("%s order: %d IC.", cmd[0], amt)
-					t.Reset(); loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
+					t.Reset()
+					loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
 					logMsg = fmt.Sprintf("iproto: sold: %d coins.\n", amt)
 					_, _ = c.Write([]byte(logMsg))
 				}
@@ -89,7 +91,8 @@ WAITING:
 				balance += amt
 				update(b)
 				logMsg := fmt.Sprintf("%s order: %d IC.", cmd[0], amt)
-				t.Reset(); loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
+				t.Reset()
+				loggerCH <- loggerMSG{msg: logMsg, color: cell.ColorYellow}
 				logMsg = fmt.Sprintf("iproto: bought: %d coins.\n", amt)
 				_, _ = c.Write([]byte(logMsg))
 			default:
@@ -103,7 +106,8 @@ WAITING:
 				_, _ = c.Write([]byte(msg))
 			case "reload":
 				reload(b)
-				t.Reset(); loggerCH <- loggerMSG{msg: "reload.",
+				t.Reset()
+				loggerCH <- loggerMSG{msg: "reload.",
 					color: cell.ColorYellow}
 				_, _ = c.Write([]byte("iproto: account reloaded.\n"))
 			default:

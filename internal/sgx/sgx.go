@@ -13,8 +13,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/donaldww/ig"
+	
+	"github.com/donaldww/idemo/internal/env"
 )
 
 // enclaveItem represents a file or directory in the enclave.
@@ -54,7 +54,7 @@ func init() {
 
 // Scan scans the Infinigon SGX enclave binaries.
 func Scan() {
-	path := ig.Env("IGBIN")
+	path := env.Bin()
 	err := filepath.Walk(path, walk)
 	if err != nil {
 		log.Fatal(err)

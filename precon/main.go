@@ -2,17 +2,30 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/donaldww/ig"
+	"github.com/donaldww/idemo/internal/conf"
+	"github.com/donaldww/idemo/internal/env"
 )
 
 func main() {
-	CONNECT := ig.NewConfig("iproto_config").GetString("TCPconnect")
+	negI := flag.String("i", "localhost", "Optional IP address")
+	flag.Parse()
+	
+	CONNECT := func() string {
+		i := conf.NewConfig("iproto_config", env.Config())
+		if *negI != "localhost" {
+			return *negI + ":" + i.GetString("TCPport")
+		} else {
+			return i.GetString("TCPconnect")
+		}
+	}()
+	
 	
 	c, err := net.Dial("tcp", CONNECT)
 	if err != nil {
