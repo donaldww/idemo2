@@ -52,11 +52,8 @@ func handleBlockchain(t *text.Text) {
 	bDump(bc)
 
 	for {
-
-		//TODO: add any captured transactions here
-		// and generate a list of transactions.
-
 		go handleConn()
+		time.Sleep(2 * time.Second)
 	}
 }
 

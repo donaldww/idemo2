@@ -195,7 +195,7 @@ func main() {
 	}
 
 	// Pre Consensus Transaction Monitor
-	blockWriteWindow, err := text.New(text.WrapAtWords())
+	blockWriteWindow, err := text.New(text.WrapAtWords(), text.RollContent())
 	if err != nil {
 		panic(err)
 	}
@@ -293,7 +293,7 @@ func main() {
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
 	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
-	// go handleBlockchain(blockWriteWindow)
+	go handleBlockchain(blockWriteWindow)
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
