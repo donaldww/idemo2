@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	
-	"github.com/donaldww/ig"
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
 )
@@ -31,7 +30,8 @@ func update(t *text.Text) {
 
 func tcpServer(t *text.Text, b *text.Text, loggerCH chan loggerMSG) {
 	reload(b)
-	PORT := ig.NewConfig("iproto_config").GetString("TCPconnect")
+	
+	PORT := cf.GetString("TCPconnect")
 	l, err := net.Listen("tcp", PORT)
 	if err != nil {
 		fmt.Println(err)
