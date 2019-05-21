@@ -33,7 +33,7 @@ func tcpServer(l net.Listener, t *text.Text, b *text.Text, loggerCH chan loggerM
 
 WAITING:
 	t.Reset()
-	msg := fmt.Sprintf("Waiting for node...")
+	msg := fmt.Sprintf("Waiting for connection...")
 	loggerCH <- loggerMSG{msg, cell.ColorYellow}
 
 	c, err := l.Accept()
