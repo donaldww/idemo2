@@ -33,23 +33,24 @@ func tcpServer(l net.Listener, t *text.Text, b *text.Text, loggerCH chan loggerM
 
 WAITING:
 	t.Reset()
-	loggerCH <- loggerMSG{"Waiting for client connection...", cell.ColorYellow}
+	msg := fmt.Sprintf("Waiting for node...")
+	loggerCH <- loggerMSG{msg, cell.ColorYellow}
 
 	c, err := l.Accept()
 	if err != nil {
 		t.Reset()
-		loggerCH <- loggerMSG{"Problem with client connection.", cell.ColorYellow}
+		loggerCH <- loggerMSG{"Problem with node connection.", cell.ColorYellow}
 		goto WAITING
 	}
 
 	t.Reset()
-	loggerCH <- loggerMSG{"Client connected.", cell.ColorYellow}
+	loggerCH <- loggerMSG{"Node connected.", cell.ColorYellow}
 
 	for {
 		netData, thisErr := bufio.NewReader(c).ReadString('\n')
 		if thisErr == io.EOF {
 			t.Reset()
-			loggerCH <- loggerMSG{"Client connection closed.", cell.ColorYellow}
+			loggerCH <- loggerMSG{"Node connection closed.", cell.ColorYellow}
 			goto WAITING
 		}
 		// '\n' must be trimmed from netData because ReadString() doesn't strip

@@ -60,6 +60,9 @@ var (
 
 	maxTransactions = cf.GetInt("maxTransactions")
 	randFactor      = cf.GetInt("randFactor")
+
+	// preconPORT is used by the TCP connect window.
+	preconPORT = cf.GetString("TCPconnect")
 )
 
 // writeConsensus generates a randomized consensus group every 3 seconds.
@@ -160,8 +163,7 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 
 func main() {
 	// Try to connect to listening port before opening the terminal box.
-	PORT := cf.GetString("TCPconnect")
-	l, err := net.Listen("tcp", PORT)
+	l, err := net.Listen("tcp", preconPORT)
 	if err != nil {
 		fmt.Printf("iproto connection error: %v\n", err)
 		os.Exit(1)
