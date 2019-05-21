@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"strconv"
 	"strings"
-	
+
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
 )
@@ -28,15 +27,8 @@ func update(t *text.Text) {
 	writeColorf(t, cell.ColorRed, "%d", balance)
 }
 
-func tcpServer(t *text.Text, b *text.Text, loggerCH chan loggerMSG) {
+func tcpServer(l net.Listener, t *text.Text, b *text.Text, loggerCH chan loggerMSG) {
 	reload(b)
-	
-	PORT := cf.GetString("TCPconnect")
-	l, err := net.Listen("tcp", PORT)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 	defer l.Close()
 
 WAITING:

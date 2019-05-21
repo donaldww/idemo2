@@ -60,7 +60,7 @@ func main() {
 
 	// The Buttons.
 	submitB, err := button.New("Submit", func() error {
-		//TODO: add submit action here
+		//TODO: add submit action
 		// updateText <- input.ReadAndClear()
 		return nil
 	},

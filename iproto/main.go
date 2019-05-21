@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net"
+	"os"
 	"time"
 
 	"github.com/mum4k/termdash"
@@ -29,7 +31,7 @@ import (
 type playType int
 
 const (
-	version                  = "v1.0.0"
+	version                  = "v1.0.1"
 	playTypePercent playType = iota
 	playTypeAbsolute
 )
@@ -81,7 +83,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
 					ldr = x.Node
-					
+
 				}
 				err := t.Write(format)
 				if err != nil {
@@ -99,7 +101,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 		case <-waitForGauge:
 			break
 		}
-		
+
 		writeColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS ")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
 		writeColorf(t, cell.ColorRed, "-->\n ")
@@ -157,7 +159,13 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 }
 
 func main() {
-	var err error
+	// Try to connect to listening port before opening the terminal box.
+	PORT := cf.GetString("TCPconnect")
+	l, err := net.Listen("tcp", PORT)
+	if err != nil {
+		fmt.Printf("iproto connection error: %v\n", err)
+		os.Exit(1)
+	}
 
 	// termbox.New returns a 'termbox' based on
 	// the user's default terminal: Terminal or iTerm.
@@ -298,8 +306,9 @@ func main() {
 	go enclaveScan(loggerCH)
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
-	go tcpServer(balanceLogger, balanceWindow, loggerCH2)
 	go handleBlockchain(blockWriteWindow, blockCH)
+
+	go tcpServer(l, balanceLogger, balanceWindow, loggerCH2)
 
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
