@@ -16,6 +16,8 @@ github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQz
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/mum4k/termdash v0.9.1 h1:Y7snCB4S3LUEOfUYbceirb0CzLvJYFEOwWwWDk5M7pI=
 github.com/mum4k/termdash v0.9.1/go.mod h1:l3tO+lJi9LZqXRq7cu7h5/8rDIK3AzelSuq2v/KncxI=
+github.com/mum4k/termdash v0.10.0 h1:uqM6ePiMf+smecb1tJJeON36o1hREeCfOmLFG0iz4a0=
+github.com/mum4k/termdash v0.10.0/go.mod h1:l3tO+lJi9LZqXRq7cu7h5/8rDIK3AzelSuq2v/KncxI=
 github.com/nsf/termbox-go v0.0.0-20190325093121-288510b9734e h1:Vbib8wJAaMEF9jusI/kMSYMr/LtRzM7+F9MJgt/nH8k=
 github.com/nsf/termbox-go v0.0.0-20190325093121-288510b9734e/go.mod h1:IuKpRQcYE1Tfu+oAQqaLisqDeXgjyyltCfsaoYN18NQ=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/56bj7Y/xa04UccTW04VP0Qed4vnQ=
