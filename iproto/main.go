@@ -86,7 +86,6 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
 					ldr = x.Node
-
 				}
 				err := t.Write(format)
 				if err != nil {
@@ -114,7 +113,6 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 			time.Sleep(moneyBagsDelay)
 		}
 		trig <- ldr
-
 	}
 }
 
@@ -216,8 +214,7 @@ func main() {
 	}
 
 	// SGX Monitor Window
-	softwareMonitorWindow, err := text.New(text.RollContent(),
-		text.WrapAtWords())
+	softwareMonitorWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
