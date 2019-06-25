@@ -302,7 +302,7 @@ func main() {
 	// Logger
 
 	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
-	go enclaveScan(loggerCH)
+	go scanEnclave(loggerCH)
 
 	go writeLogger(ctx, balanceLogger, loggerCH2)
 	go handleBlockchain(blockWriteWindow, blockCH)

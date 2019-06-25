@@ -90,7 +90,6 @@ WAITING:
 				_, _ = c.Write([]byte(logMsg))
 			default:
 				_, _ = c.Write([]byte("iproto: invalid command: must be 'buy' or 'sell'.\n"))
-
 			}
 		case 1:
 			switch cmd[0] {

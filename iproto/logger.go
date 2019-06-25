@@ -45,7 +45,7 @@ func writeLogger(_ context.Context, t *text.Text, loggerCH chan loggerMSG) {
 	}
 }
 
-func enclaveScan(loggerCH chan loggerMSG) {
+func scanEnclave(loggerCH chan loggerMSG) {
 	loggerDelay := cf.GetMilliseconds("loggerDelay")
 	for {
 		sgx.Scan()

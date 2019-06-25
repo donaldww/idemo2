@@ -18,7 +18,6 @@ import (
 //  ... [termdash/cell/color.go]
 //  format: a Printf/Sprintf-style format string
 //  args: an optional list of comma-separated arguments (varags)
-//
 func writeColorf(t *text.Text, color cell.Color, format string, args ...interface{}) {
 	_ = t.Write(fmt.Sprintf(format, args...), text.WriteCellOpts(cell.FgColor(color)))
 }

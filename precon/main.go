@@ -55,7 +55,7 @@ func main() {
 		default:
 			// Send message to server.
 			_, _ = fmt.Fprintf(connection, text+"\n")
-			// Receive message from server.
+			// Receive response from server.
 			message, _ := bufio.NewReader(connection).ReadString('\n')
 			// Print response.
 			fmt.Print("response> " + message)
