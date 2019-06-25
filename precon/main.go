@@ -14,24 +14,28 @@ import (
 )
 
 func main() {
-	negI := flag.String("i", "localhost", "Optional IP address")
+	flagI := flag.String("i", "localhost", "Optional IP address")
 	flag.Parse()
-	
-	CONNECT := func() string {
-		i := conf.NewConfig("iproto_config", env.Config())
-		if *negI != "localhost" {
-			return *negI + ":" + i.GetString("TCPport")
+
+	tcpConnectString := func() string {
+		// If the user has entered an IP address on the commandline, then
+		// combine that address with the port found in the config file.
+		// If the user hasn't over-ridden the default ('localhost'), then
+		// use the connect string found in the confin file.
+		config := conf.NewConfig("iproto_config", env.Config())
+		if *flagI != "localhost" {
+			return *flagI + ":" + config.GetString("TCPport")
 		} else {
-			return i.GetString("TCPconnect")
+			return config.GetString("TCPconnect")
 		}
 	}()
-	
-	
-	c, err := net.Dial("tcp", CONNECT)
+
+	connection, err := net.Dial("tcp", tcpConnectString)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	myTime := time.Now().Format(time.RFC3339)
 	fmt.Println("precon version 0.1.0", myTime)
 	fmt.Println("Enter 'help' for usage hints.")
@@ -50,9 +54,9 @@ func main() {
 			break
 		default:
 			// Send message to server.
-			_, _ = fmt.Fprintf(c, text+"\n")
+			_, _ = fmt.Fprintf(connection, text+"\n")
 			// Receive message from server.
-			message, _ := bufio.NewReader(c).ReadString('\n')
+			message, _ := bufio.NewReader(connection).ReadString('\n')
 			// Print response.
 			fmt.Print("response> " + message)
 		}
@@ -60,7 +64,7 @@ func main() {
 }
 
 func printHelp() {
-	msg := `precon commands:
+	const msg = `precon commands:
 "buy or sell" <amount>
 "reload" to replenish account
 "bal" to retrieve current balance
