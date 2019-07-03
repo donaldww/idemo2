@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 # Start cockroachdb
 
 cd "$IGHOME/data" || exit
 
 echo
-echo "Starting Cockroachdb"
+echo "Starting cockroachdb"
 echo
 
 cockroach start --certs-dir="$IGHOME/certs" --listen-addr=localhost >/dev/null 2>&1 &
@@ -21,4 +21,4 @@ sleep 1
 # Show cockroach nodes
 # ps -axf | grep "[c]ockroach | grep -v grep"
 
-pgrep -f "cockroach"
+pgrep -fi cockroach
