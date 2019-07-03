@@ -21,4 +21,4 @@ sleep 1
 # Show cockroach nodes
 # ps -axf | grep "[c]ockroach | grep -v grep"
 
-pgrep -fi cockroach
+pgrep -fl cockroach
