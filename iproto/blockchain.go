@@ -8,7 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"time"
-	
+
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
 	"github.com/nu7hatch/gouuid"
@@ -27,11 +27,8 @@ type Block struct {
 
 // Blockchain is a series of validated Blocks
 var bc []Block
-
 var tWindow *text.Text
-
 var flag = false
-
 var leader string
 
 // A counter.
@@ -85,7 +82,6 @@ func handleBlockchain(t *text.Text, trig chan string) {
 }
 
 func handleBlocks(trans int) {
-
 	newBlock, err := generateBlock(bc[len(bc)-1], trans)
 	if err != nil {
 		panic(err)
@@ -116,7 +112,6 @@ func isBlockValid(newBlock, oldBlock Block) bool {
 
 // make sure the chain we're checking is longer than the current bc
 func replaceChain(newBlocks []Block) {
-
 	if len(newBlocks) > len(bc) {
 		bc = newBlocks
 	}
@@ -133,21 +128,8 @@ func calculateHash(block Block) string {
 
 // create a new block using previous block's hash
 func generateBlock(oldBlock Block, amount int) (Block, error) {
-
 	var newBlock Block
-
 	t := time.Now()
-
-	// var s string
-	//
-	// c := consensus.CurrentGroup()
-	//
-	// for i , y := range *c {
-	// 	if y.IsLeader {
-	// 		s = consensus.NodeIds[i]
-	// 		break
-	// 	}
-	// }
 
 	u3, err := uuid.NewV3(uuid.NamespaceURL, []byte(leader))
 	if err != nil {

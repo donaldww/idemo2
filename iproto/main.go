@@ -68,8 +68,8 @@ var (
 // writeConsensus generates a randomized consensus group every 3 seconds.
 func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig chan string) {
 	var (
-		ctr = 0
-		ldr = ""
+		ctr       = 0
+		theLeader = ""
 	)
 
 	for {
@@ -85,7 +85,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 			for _, x := range *nodes {
 				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
-					ldr = x.Node
+					theLeader = x.Node
 				}
 				err := t.Write(format)
 				if err != nil {
@@ -97,7 +97,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 		}
 
 		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
-		writeColorf(t, cell.ColorRed, "\n %s\n", ldr)
+		writeColorf(t, cell.ColorRed, "\n %s\n", theLeader)
 
 		select {
 		case <-waitForGauge:
@@ -112,7 +112,7 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 			writeColorf(t, cell.ColorRed, "💰")
 			time.Sleep(moneyBagsDelay)
 		}
-		trig <- ldr
+		trig <- theLeader
 	}
 }
 
@@ -222,8 +222,7 @@ func main() {
 	title := fmt.Sprintf(" IG17 BLOCKCHAIN DEMO %s - PRESS Q TO QUIT ", version)
 
 	// Container Layout.
-	c, err := cr.New(
-		t,
+	c, err := cr.New(t,
 		cr.Border(linestyle.Light),
 		cr.BorderColor(cell.ColorDefault),
 		cr.BorderTitleAlignCenter(),
@@ -297,8 +296,7 @@ func main() {
 	// Display randomly generated nodes in the 'consensusWindow'.
 	go writeConsensus(ctx, consensusWindow, consensusDelay, blockCH)
 	// Play the transaction gathering gauge.
-	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay,
-		playTypeAbsolute)
+	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
 	// Logger
 
 	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
