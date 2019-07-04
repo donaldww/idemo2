@@ -4,9 +4,9 @@
 
 cd "$IGHOME/data" || exit
 
-echo
+export COCKROACH_INSECURE=false
+
 echo "Starting cockroachdb"
-echo
 
 cockroach start --certs-dir="$IGHOME/certs" --listen-addr=localhost >/dev/null 2>&1 &
 
@@ -17,8 +17,5 @@ cockroach start --certs-dir="$IGHOME/certs" --store=node3 --listen-addr=localhos
   --http-addr=localhost:8082 --join=localhost:26257 >/dev/null 2>&1 &
 
 sleep 1
-
-# Show cockroach nodes
-# ps -axf | grep "[c]ockroach | grep -v grep"
 
 pgrep -fl cockroach
