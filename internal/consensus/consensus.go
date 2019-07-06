@@ -17,7 +17,9 @@ type nodeID struct {
 
 var consGrp []nodeID
 
-// NewGroup returns a random list of consGrp used for consensus.
+// NewGroup returns a randomized list of consGrp nodes.
+//
+// IsLeader=true indicates the group leader, false a regular node.
 func NewGroup(nuNodes int) *[]nodeID {
 	consGrp = nil
 	list := randList(nuNodes)
@@ -32,19 +34,14 @@ func NewGroup(nuNodes int) *[]nodeID {
 	return &consGrp
 }
 
-// CurrentGroup returns a pointer to the current consensus group.
-func CurrentGroup() *[]nodeID {
-	return &consGrp
-}
-
-// GenLeader returns an 'int' that represents the consensus leader.
+// Returns a random 'int' that represents the consensus leader.
 func randLeader(n int) int {
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
 	return r1.Intn(n)
 }
 
-// Returns an array of random numbers of 'n' length.
+// Returns an array of random numbers of size 'n'.
 func randList(n int) []int {
 	max := len(NodeIds)
 	result := make([]int, n)

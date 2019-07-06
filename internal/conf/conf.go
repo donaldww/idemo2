@@ -11,22 +11,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config is a handle to a toml config file.
+// Config is a context handle to a toml config file.
 type Config int
 
-// NewConfig returns a handle to a config file.
+// NewConfig returns a config file context.
 func NewConfig(configFile string, path ...string) Config {
-	// configFile=<name_of_config_file> (without extension)
+	// configFile=<a_file_name> without the filename extension.
 	viper.SetConfigName(configFile)
-	// Call AddConfigPath multiple times to add directories.
+
+	// AddConfigPath may be called multiple times to add directories.
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./testdata")
 	if path != nil {
 		viper.AddConfigPath(path[0])
 	}
 
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
+	err := viper.ReadInConfig()
+	if err != nil {
 		panic(fmt.Errorf("Fatal error reading config file: %s\n", err))
 	}
 
@@ -61,7 +62,7 @@ func (c Config) GetMilliseconds(key string) time.Duration {
 	return time.Duration(viper.GetInt(key)) * time.Millisecond
 }
 
-// GetSeconds returns a Duration in seconds
+// GetSeconds returns a Duration in seconds.
 func (c Config) GetSeconds(key string) time.Duration {
 	return time.Duration(viper.GetInt(key)) * time.Second
 }

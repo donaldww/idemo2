@@ -94,8 +94,8 @@ WAITING:
 		case 1:
 			switch cmd[0] {
 			case "bal":
-				msg := fmt.Sprintf("iproto: current balance: %d IC.\n", balance)
-				_, _ = c.Write([]byte(msg))
+				balMsg := fmt.Sprintf("iproto: current balance: %d IC.\n", balance)
+				_, _ = c.Write([]byte(balMsg))
 			case "reload":
 				reload(b)
 				t.Reset()

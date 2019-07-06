@@ -54,8 +54,6 @@ func bDump(b []Block) {
 	writeColorf(tWindow, cell.ColorRed, " 💰")
 	writeColorf(tWindow, color, " %#v\n", b[i])
 	flag = !flag
-
-	// }
 }
 
 // handleBlockchain is the main point of for the blockchain window.

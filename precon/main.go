@@ -45,7 +45,7 @@ func main() {
 	for {
 		fmt.Print("precon> ")
 		text, _ := reader.ReadString('\n')
-		switch strings.TrimSpace(string(text)) {
+		switch strings.TrimSpace(text) {
 		case "quit", "q":
 			fmt.Println("TCP client exiting...")
 			os.Exit(0)
