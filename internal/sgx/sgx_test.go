@@ -9,7 +9,7 @@ import (
 	"math"
 	"os"
 	"testing"
-
+	
 	"github.com/donaldww/ig"
 )
 
@@ -35,13 +35,13 @@ func TestAbs(t *testing.T) {
 func TestInfiniBin(t *testing.T) {
 	home, _ := os.UserHomeDir()
 	homeDir := home + "/" + ".infinigon/bin"
-
+	
 	var tests = []struct {
 		want string
 	}{
 		{homeDir},
 	}
-
+	
 	for _, test := range tests {
 		got := ig.Env("IGBIN")
 		if got != test.want {

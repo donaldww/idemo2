@@ -11,8 +11,8 @@ import (
 
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
-
-	"github.com/donaldww/idemo/internal/sgx"
+	
+	"idemo/internal/sgx"
 )
 
 type loggerMSG struct {

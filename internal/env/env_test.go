@@ -5,7 +5,7 @@ import (
 )
 
 func TestHome(t *testing.T) {
-
+	
 	var simpleTests = []struct {
 		in  string
 		out string
@@ -16,13 +16,13 @@ func TestHome(t *testing.T) {
 		{Data(), "/usr/local/ig/data"},
 		{Tmp(), "/usr/local/ig/tmp"},
 	}
-
+	
 	for _, tt := range simpleTests {
 		t.Run(tt.in, func(t *testing.T) {
 			if tt.in != tt.out {
 				t.Errorf("got %q, wanted %q", tt.in, tt.out)
 			}
 		})
-
+		
 	}
 }

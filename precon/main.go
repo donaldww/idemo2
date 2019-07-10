@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/donaldww/idemo/internal/conf"
-	"github.com/donaldww/idemo/internal/env"
+	
+	"idemo/internal/conf"
+	"idemo/internal/env"
 )
 
 func main() {
