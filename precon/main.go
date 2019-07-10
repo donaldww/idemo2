@@ -16,7 +16,7 @@ import (
 func main() {
 	flagI := flag.String("i", "localhost", "Optional IP address")
 	flag.Parse()
-
+	
 	tcpConnectString := func() string {
 		// If the user has entered an IP address on the commandline, then
 		// combine that address with the port found in the config file.
@@ -29,18 +29,18 @@ func main() {
 			return config.GetString("TCPconnect")
 		}
 	}()
-
+	
 	connection, err := net.Dial("tcp", tcpConnectString)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
+	
 	myTime := time.Now().Format(time.RFC3339)
 	fmt.Println("precon version 0.1.0", myTime)
 	fmt.Println("Enter 'help' for usage hints.")
 	fmt.Println("Connected to IG17 demo server.")
-
+	
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("precon> ")
@@ -69,6 +69,6 @@ func printHelp() {
 "reload" to replenish account
 "bal" to retrieve current balance
 "q or quit" to exit`
-
+	
 	fmt.Println(msg)
 }

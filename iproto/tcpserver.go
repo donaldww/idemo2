@@ -7,7 +7,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
-
+	
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
 )
@@ -35,17 +35,17 @@ WAITING:
 	t.Reset()
 	msg := fmt.Sprintf("Waiting for connection...")
 	loggerCH <- loggerMSG{msg, cell.ColorYellow}
-
+	
 	c, err := l.Accept()
 	if err != nil {
 		t.Reset()
 		loggerCH <- loggerMSG{"Problem with node connection.", cell.ColorYellow}
 		goto WAITING
 	}
-
+	
 	t.Reset()
 	loggerCH <- loggerMSG{"Node connected.", cell.ColorYellow}
-
+	
 	for {
 		netData, thisErr := bufio.NewReader(c).ReadString('\n')
 		if thisErr == io.EOF {
@@ -56,7 +56,7 @@ WAITING:
 		// '\n' must be trimmed from netData because ReadString() doesn't strip
 		// the EOL character.
 		cmd := strings.Split(strings.TrimRight(netData, "\n"), " ")
-
+		
 		switch len(cmd) {
 		case 2:
 			amt, thisErr2 := strconv.Atoi(cmd[1])
