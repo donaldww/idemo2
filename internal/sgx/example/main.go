@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 	
-	"github.com/donaldww/idemo/internal/sgx"
+	"idemo/internal/sgx"
 )
 
 const scanInterval = 2
