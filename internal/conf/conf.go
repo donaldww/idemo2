@@ -7,7 +7,7 @@ package conf
 import (
 	"fmt"
 	"time"
-	
+
 	"github.com/spf13/viper"
 )
 
@@ -18,19 +18,19 @@ type Config int
 func NewConfig(configFile string, path ...string) Config {
 	// configFile=<a_file_name> without the filename extension.
 	viper.SetConfigName(configFile)
-	
+
 	// AddConfigPath may be called multiple times to add directories.
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("./testdata")
 	if path != nil {
 		viper.AddConfigPath(path[0])
 	}
-	
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error reading config file: %s\n", err))
 	}
-	
+
 	//TODO: implement WatchConfig reload
 	// viper.WatchConfig()
 	// viper.OnConfigChange(reload)

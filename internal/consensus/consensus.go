@@ -47,7 +47,7 @@ func randList(n int) []int {
 	result := make([]int, n)
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
-	
+
 	for i := 0; i < n; i++ {
 		result[i] = r1.Intn(max)
 	}

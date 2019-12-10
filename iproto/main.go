@@ -12,7 +12,7 @@ import (
 	"net"
 	"os"
 	"time"
-	
+
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/cell"
 	cr "github.com/mum4k/termdash/container"
@@ -21,7 +21,7 @@ import (
 	"github.com/mum4k/termdash/terminal/terminalapi"
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
-	
+
 	"idemo/internal/conf"
 	"idemo/internal/consensus"
 	"idemo/internal/env"
@@ -38,29 +38,29 @@ const (
 
 var (
 	waitForGauge = make(chan bool)
-	
+
 	cf = conf.NewConfig("iproto_config", env.Config())
-	
+
 	// Relative size of windows
 	gaugeConsensus      = cf.GetInt("gaugeConsensus")
 	consensusSGXmonitor = cf.GetInt("consensusSGXmonitor")
 	inputBlock          = cf.GetInt("inputBlock")
 	inputButtons        = cf.GetInt("inputButtons")
-	
+
 	// Consensus window.
 	numberOfNodes     = cf.GetInt("numberOfNodes")
 	numberOfMoneyBags = cf.GetInt("numberOfMoneyBags")
 	consensusDelay    = cf.GetMilliseconds("consensusDelay")
 	moneyBagsDelay    = cf.GetMilliseconds("moneyBagsDelay")
-	
+
 	// Gauge window
 	gaugeDelay    = cf.GetMilliseconds("gaugeDelay")
 	endGaugeWait  = cf.GetMilliseconds("endGaugeWait")
 	gaugeInterval = cf.GetInt("gaugeInterval")
-	
+
 	maxTransactions = cf.GetInt("maxTransactions")
 	randFactor      = cf.GetInt("randFactor")
-	
+
 	// preconPORT is used by the TCP connect window.
 	preconPORT = cf.GetString("TCPconnect")
 )
@@ -71,14 +71,14 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 		ctr       = 0
 		theLeader = ""
 	)
-	
+
 	for {
 		t.Reset()
 		ctr++
-		
+
 		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
 		writeColorf(t, cell.ColorRed, "%d\n\n", ctr)
-		
+
 		select {
 		default:
 			nodes := consensus.NewGroup(numberOfNodes)
@@ -95,19 +95,19 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 		case <-ctx.Done():
 			return
 		}
-		
+
 		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
 		writeColorf(t, cell.ColorRed, "\n %s\n", theLeader)
-		
+
 		select {
 		case <-waitForGauge:
 			break
 		}
-		
+
 		writeColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS ")
 		writeColorf(t, cell.ColorRed, "%d ", ctr)
 		writeColorf(t, cell.ColorRed, "-->\n ")
-		
+
 		for i := 0; i < numberOfMoneyBags; i++ {
 			writeColorf(t, cell.ColorRed, "💰")
 			time.Sleep(moneyBagsDelay)
@@ -127,10 +127,10 @@ var maxT int
 // playGauge continuously changes the displayed percent value on the
 // gauge by the step once every delay. Exits when the context expires.
 func playGauge(ctx context.Context, g *gauge.Gauge, step int,
-		delay time.Duration, pt playType) {
+	delay time.Duration, pt playType) {
 	prog := 0
 	maxT = maxTransactions - maxTransactionsAdjust()
-	
+
 	ticker := time.NewTicker(delay)
 	defer ticker.Stop()
 	for {
@@ -166,7 +166,7 @@ func main() {
 		fmt.Printf("iproto connection error: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// termbox.New returns a 'termbox' based on
 	// the user's default terminal: Terminal or iTerm.
 	t, err := termbox.New(termbox.ColorMode(terminalapi.ColorMode256))
@@ -174,28 +174,28 @@ func main() {
 		panic(err)
 	}
 	defer t.Close()
-	
+
 	// Returns a context and cancel function.
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// Display an account name and balance.
 	balanceWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Display an account name and balance.
 	balanceLogger, err := text.New()
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Gauge: Transaction Generator Window
 	transactionGauge, err := gauge.New(
 		gauge.Height(1),
@@ -206,21 +206,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Pre Consensus Transaction Monitor
 	blockWriteWindow, err := text.New(text.WrapAtWords(), text.RollContent())
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// SGX Monitor Window
 	softwareMonitorWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
-	
+
 	title := fmt.Sprintf(" IG17 BLOCKCHAIN DEMO %s - PRESS Q TO QUIT ", version)
-	
+
 	// Container Layout.
 	c, err := cr.New(t,
 		cr.Border(linestyle.Light),
@@ -282,38 +282,38 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// **********
 	// GOROUTINES
 	// **********
-	
+
 	var (
 		loggerCH  = make(chan loggerMSG, 10)
 		loggerCH2 = make(chan loggerMSG, 10)
 		blockCH   = make(chan string)
 	)
-	
+
 	// Display randomly generated nodes in the 'consensusWindow'.
 	go writeConsensus(ctx, consensusWindow, consensusDelay, blockCH)
 	// Play the transaction gathering gauge.
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
 	// Logger
-	
+
 	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
 	go scanEnclave(loggerCH)
-	
+
 	go writeLogger(ctx, balanceLogger, loggerCH2)
 	go handleBlockchain(blockWriteWindow, blockCH)
-	
+
 	go tcpServer(l, balanceLogger, balanceWindow, loggerCH2)
-	
+
 	// Register the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
 		if k.Key == 'q' || k.Key == 'Q' {
 			cancel() // generated by contextWithCancel()
 		}
 	}
-	
+
 	// Run the program.
 	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); thisErr != nil {
 		panic(thisErr)

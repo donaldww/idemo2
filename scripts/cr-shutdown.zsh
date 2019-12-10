@@ -7,3 +7,4 @@ pkill cockroach >/dev/null
 sleep 1
 
 pgrep -fl cockroach
+

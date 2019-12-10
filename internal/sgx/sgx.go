@@ -13,7 +13,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	
+
 	"idemo/internal/env"
 )
 
@@ -69,25 +69,25 @@ func walk(path string, _ os.FileInfo, _ error) error {
 	}
 	mode := fileInfo.Mode()
 	name := fileInfo.Name()
-	
+
 	switch {
 	case mode.IsRegular():
 		key := name + ".f"
 		scannedEnclave[key] =
-				enclaveItem{Name: name, Path: path, Type: "f", Md5: getMd5(path), Shasum: getShaSum(path)}
+			enclaveItem{Name: name, Path: path, Type: "f", Md5: getMd5(path), Shasum: getShaSum(path)}
 		scannedList = append(scannedList, key)
 	case mode.IsDir():
 		key := name + ".d"
 		scannedEnclave[key] =
-				enclaveItem{Name: name, Path: path, Type: "d", Md5: "", Shasum: getShaSum(path)}
+			enclaveItem{Name: name, Path: path, Type: "d", Md5: "", Shasum: getShaSum(path)}
 		scannedList = append(scannedList, key)
 	default:
 		key := name + ".u"
 		scannedEnclave[key] =
-				enclaveItem{Name: name, Path: path, Type: "u", Md5: "", Shasum: getShaSum(path)}
+			enclaveItem{Name: name, Path: path, Type: "u", Md5: "", Shasum: getShaSum(path)}
 		scannedList = append(scannedList, key)
 	}
-	
+
 	return nil
 }
 
