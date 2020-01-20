@@ -8,10 +8,10 @@ import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
-	
+
 	"idemo/internal/sgx"
 )
 

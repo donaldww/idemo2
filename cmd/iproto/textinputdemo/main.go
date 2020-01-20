@@ -19,7 +19,7 @@ import (
 	"context"
 	"time"
 	"unicode"
-	
+
 	"github.com/mum4k/termdash"
 	"github.com/mum4k/termdash/align"
 	"github.com/mum4k/termdash/cell"
@@ -45,9 +45,9 @@ func main() {
 		panic(err)
 	}
 	defer t.Close()
-	
+
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	// The input field.
 	input, err := textinput.New(
 		textinput.Label("Amount: ", cell.FgColor(cell.ColorBlue)),
@@ -57,7 +57,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// The Buttons.
 	submitB, err := button.New("Submit", func() error {
 		//TODO: add submit action
@@ -68,7 +68,7 @@ func main() {
 		button.GlobalKey(keyboard.KeyEnter),
 		button.FillColor(cell.ColorNumber(220)),
 	)
-	
+
 	clearB, err := button.New("Clear", func() error {
 		input.ReadAndClear()
 		//TODO: what does the clear button do?
@@ -79,7 +79,7 @@ func main() {
 		button.WidthFor("Submit"),
 		button.FillColor(cell.ColorNumber(220)),
 	)
-	
+
 	quitB, err := button.New("Quit", func() error {
 		cancel()
 		return nil
@@ -88,10 +88,10 @@ func main() {
 		button.WidthFor("Submit"),
 		button.FillColor(cell.ColorNumber(196)),
 	)
-	
+
 	// Make the grid.
 	builder := grid.New()
-	
+
 	builder.Add(
 		grid.RowHeightPerc(20,
 			grid.Widget(
@@ -102,7 +102,7 @@ func main() {
 			),
 		),
 	)
-	
+
 	builder.Add(
 		grid.RowHeightPerc(40,
 			grid.ColWidthPerc(20),
@@ -130,18 +130,18 @@ func main() {
 			grid.ColWidthPerc(20),
 		),
 	)
-	
+
 	// Grid is added to the container here.
 	gridOpts, err := builder.Build()
 	if err != nil {
 		panic(err)
 	}
-	
+
 	c, err := container.New(t, gridOpts...)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Run.
 	i := termdash.RedrawInterval(500 * time.Millisecond)
 	if thisErr := termdash.Run(ctx, t, c, i); thisErr != nil {
