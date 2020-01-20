@@ -14,7 +14,7 @@ import (
 	"github.com/nu7hatch/gouuid"
 )
 
-// Block represents each 'item' in the bc
+// Block represents each 'item' in the blockchain
 type Block struct {
 	Hash                 string
 	Timestamp            string
@@ -115,7 +115,7 @@ func replaceChain(newBlocks []Block) {
 	}
 }
 
-// SHA256 hasing
+// SHA256 hashing
 func calculateHash(block Block) string {
 	record := string(block.Nonce) + block.Timestamp + string(block.NumberOfTransactions) + block.PrevHash
 	h := sha256.New()
