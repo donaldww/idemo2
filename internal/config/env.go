@@ -9,52 +9,31 @@ import (
 	"os"
 )
 
-var igHome string
+type Home struct {
+	home string `env:"HOME"`
+}
+
+var myHome Home
 
 func init() {
-	d, ok := os.LookupEnv("IGHOME")
+	d, ok := os.LookupEnv("ENCLAVE_HOME")
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 	if !ok {
-		igHome = home + "/ig"
+		myHome.home = home + "/.config/enclave"
 	} else {
-		igHome = d
-	}
-}
-
-// Tmp returns IG tmp dir
-func Tmp() string {
-	d, ok := os.LookupEnv("IGTMP")
-	if !ok {
-		return igHome + "/tmp"
-	} else {
-		return d
-	}
-}
-
-// Data returns the data directory.
-func Data() string {
-	d, ok := os.LookupEnv("IGDATA")
-	if !ok {
-		return igHome + "/data"
-	} else {
-		return d
+		myHome.home = d
 	}
 }
 
 // HomeConfig returns the configuration directory.
 func HomeConfig() string {
-	return igHome + "/config"
+	return myHome.home + "/config"
 }
 
 // Bin returns IG bin directory.
 func Bin() string {
-	return igHome + "/bin"
-}
-
-// Home returns IG home directory.
-func Home() string {
-	return igHome
+	return myHome.home + "/bin"
 }

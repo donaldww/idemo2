@@ -53,7 +53,7 @@ func ScanEnclave(loggerCH chan MSG, cf config.File) {
 		if err := sgx.IsValid(); err != nil {
 			loggerCH <- MSG{Msg: fmt.Sprintf("%v", err), Color: cell.ColorRed}
 		} else {
-			loggerCH <- MSG{Msg: "IG17-SGX ENCLAVE: Verified.", Color: cell.ColorGreen}
+			loggerCH <- MSG{Msg: "SGX SIMULATOR ENCLAVE: Verified.", Color: cell.ColorGreen}
 		}
 		sgx.Reset()
 		time.Sleep(loggerDelay)

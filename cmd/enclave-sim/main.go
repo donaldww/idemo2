@@ -43,7 +43,7 @@ const (
 var (
 	waitForGauge = make(chan bool)
 
-	cf = config.NewConfig("iproto_config", config.HomeConfig())
+	cf = config.NewConfig("enclave_config", config.HomeConfig())
 
 	// Relative size of windows
 	gaugeConsensus      = cf.GetInt("gaugeConsensus")
@@ -204,7 +204,7 @@ func main() {
 		gauge.Height(1),
 		gauge.Color(cell.ColorBlue),
 		gauge.Border(linestyle.Light),
-		gauge.BorderTitle(" Collecting Infinicoin Trades "),
+		gauge.BorderTitle(" Collecting Trades "),
 	)
 	if err != nil {
 		panic(err)
@@ -222,7 +222,7 @@ func main() {
 		panic(err)
 	}
 
-	title := fmt.Sprintf(" IG17 BLOCKCHAIN DEMO %s - PRESS Q TO QUIT ", version)
+	title := fmt.Sprintf(" ENCLAVE SIMULATER %s - PRESS Q TO QUIT ", version)
 
 	// Container Layout.
 	c, err := cr.New(t,

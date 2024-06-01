@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/donaldww/idemo2/internal/config"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -92,7 +91,7 @@ func walk(path string, _ os.FileInfo, _ error) error {
 
 // getMd5 returns the md5 encoding of a string, in hex.
 func getMd5(aString string) string {
-	data, err := ioutil.ReadFile(aString)
+	data, err := os.ReadFile(aString)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -127,9 +126,9 @@ func IsValid() (err_ error) {
 	diff := len(stableEnclave) - len(scannedEnclave)
 	switch {
 	case diff > 0:
-		return enclaveError{"IG17-SGX ENCLAVE: File removed!"}
+		return enclaveError{"SGX SIMULATOR ENCLAVE: File removed!"}
 	case diff < 0:
-		return enclaveError{"IG17-SGX ENCLAVE: Rogue file added!"}
+		return enclaveError{"SGX SIMULATOR ENCLAVE: Rogue file added!"}
 	default:
 		return checkFileStatus()
 	}
@@ -139,7 +138,7 @@ func checkFileStatus() error {
 	for _, x := range scannedList {
 		if scannedEnclave[x].Type == "f" {
 			if scannedEnclave[x].Md5 != stableEnclave[x].Md5 {
-				msg := fmt.Sprintf("IG17-SGX ENCLAVE: %s chksum failed!",
+				msg := fmt.Sprintf("SGX SIMULATOR ENCLAVE: %s chksum failed!",
 					scannedEnclave[x].Name)
 				return enclaveError{msg}
 			}
@@ -148,11 +147,11 @@ func checkFileStatus() error {
 	for _, x := range scannedList {
 		if scannedEnclave[x].ShaSum != stableEnclave[x].ShaSum {
 			if scannedEnclave[x].Type == "f" {
-				msg := fmt.Sprintf("IG17-SGX ENCLAVE: file changed from %s to %s!",
+				msg := fmt.Sprintf("SGX SIMULATOR ENCLAVE: file changed from %s to %s!",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
 				return enclaveError{msg}
 			} else {
-				msg := fmt.Sprintf("IG17-SGX ENCLAVE: directory changed from %s to %s!",
+				msg := fmt.Sprintf("SGX SIMULATOR ENCLAVE: directory changed from %s to %s!",
 					stableEnclave[x].Name, scannedEnclave[x].Name)
 				return enclaveError{msg}
 			}
