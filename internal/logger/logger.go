@@ -2,11 +2,12 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-package main
+package logger
 
 import (
 	"context"
 	"fmt"
+	"github.com/donaldww/idemo2/internal/config"
 	"github.com/donaldww/idemo2/internal/sgx"
 	"github.com/donaldww/idemo2/internal/term"
 	"time"
@@ -15,13 +16,13 @@ import (
 	"github.com/mum4k/termdash/widgets/text"
 )
 
-type loggerMSG struct {
-	msg   string
-	color cell.Color
+type MSG struct {
+	Msg   string
+	Color cell.Color
 }
 
-// writeLogger logs messages into the SGX monitor widget.
-func writeLogger(_ context.Context, t *text.Text, loggerCH chan loggerMSG) {
+// WriteLogger logs messages into the SGX monitor widget.
+func WriteLogger(_ context.Context, t *text.Text, loggerCH chan MSG, cf config.File) {
 	counter := 0
 	loggerRefresh := cf.GetInt("loggerRefresh")
 	for {
@@ -32,27 +33,27 @@ func writeLogger(_ context.Context, t *text.Text, loggerCH chan loggerMSG) {
 				counter = 0
 			}
 			tNow := time.Now()
-			term.WriteColorf(t, log.color, " %s: %s\n",
+			term.WriteColorf(t, log.Color, " %s: %s\n",
 				time.Date(
 					tNow.Year(), tNow.Month(), tNow.Day(),
 					tNow.Hour(), tNow.Minute(), tNow.Second(), tNow.Nanosecond(),
 					tNow.Location(),
 				),
-				log.msg,
+				log.Msg,
 			)
 			counter++
 		}
 	}
 }
 
-func scanEnclave(loggerCH chan loggerMSG) {
+func ScanEnclave(loggerCH chan MSG, cf config.File) {
 	loggerDelay := cf.GetMilliseconds("loggerDelay")
 	for {
 		sgx.Scan()
 		if err := sgx.IsValid(); err != nil {
-			loggerCH <- loggerMSG{msg: fmt.Sprintf("%v", err), color: cell.ColorRed}
+			loggerCH <- MSG{Msg: fmt.Sprintf("%v", err), Color: cell.ColorRed}
 		} else {
-			loggerCH <- loggerMSG{msg: "IG17-SGX ENCLAVE: Verified.", color: cell.ColorGreen}
+			loggerCH <- MSG{Msg: "IG17-SGX ENCLAVE: Verified.", Color: cell.ColorGreen}
 		}
 		sgx.Reset()
 		time.Sleep(loggerDelay)

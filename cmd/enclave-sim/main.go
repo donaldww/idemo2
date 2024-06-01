@@ -2,12 +2,16 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-// iproto runs a demonstration of IG17 bc in operation.
+// enclave-sim runs a simulation of a blockchain
+// using an enclave to protect the components.
 package main
 
 import (
 	"context"
 	"fmt"
+	"github.com/donaldww/idemo2/internal/blockchain"
+	"github.com/donaldww/idemo2/internal/logger"
+	"github.com/donaldww/idemo2/internal/tcp"
 	"github.com/donaldww/idemo2/internal/term"
 	"log"
 	"math/rand"
@@ -287,8 +291,8 @@ func main() {
 	// **********
 
 	var (
-		loggerCH  = make(chan loggerMSG, 10)
-		loggerCH2 = make(chan loggerMSG, 10)
+		loggerCH  = make(chan logger.MSG, 10)
+		loggerCH2 = make(chan logger.MSG, 10)
 		blockCH   = make(chan string)
 	)
 
@@ -298,11 +302,11 @@ func main() {
 	// Play the transaction gathering gauge.
 	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
 
-	go writeLogger(ctx, softwareMonitorWindow, loggerCH)
-	go scanEnclave(loggerCH)
-	go writeLogger(ctx, balanceLogger, loggerCH2)
-	go handleBlockchain(blockWriteWindow, blockCH)
-	go tcpServer(l, balanceLogger, balanceWindow, loggerCH2)
+	go logger.WriteLogger(ctx, softwareMonitorWindow, loggerCH, cf)
+	go logger.ScanEnclave(loggerCH, cf)
+	go logger.WriteLogger(ctx, balanceLogger, loggerCH2, cf)
+	go blockchain.HandleBlockchain(blockWriteWindow, blockCH, maxT)
+	go tcp.Server(l, balanceLogger, balanceWindow, loggerCH2, cf)
 
 	// Define the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {

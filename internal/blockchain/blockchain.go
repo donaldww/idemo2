@@ -2,11 +2,12 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-package main
+package blockchain
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
+
 	"github.com/donaldww/idemo2/internal/term"
 	"time"
 
@@ -57,8 +58,8 @@ func bDump(b []Block) {
 	flag = !flag
 }
 
-// handleBlockchain is the main point of for the blockchain window.
-func handleBlockchain(t *text.Text, trig chan string) {
+// HandleBlockchain is the main point of for the blockchain window.
+func HandleBlockchain(t *text.Text, trig chan string, maxT int) {
 	tWindow = t
 
 	// Create genesis block.
@@ -118,7 +119,7 @@ func replaceChain(newBlocks []Block) {
 
 // SHA256 hashing
 func calculateHash(block Block) string {
-	record := string(block.Nonce) + block.Timestamp + string(block.NumberOfTransactions) + block.PrevHash
+	record := string(rune(block.Nonce)) + block.Timestamp + string(rune(block.NumberOfTransactions)) + block.PrevHash
 	h := sha256.New()
 	h.Write([]byte(record))
 	hashed := h.Sum(nil)
