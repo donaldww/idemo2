@@ -9,21 +9,20 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/donaldww/idemo2/internal/config"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-
-	"idemo/internal/env"
 )
 
-// enclaveItem represents a file or directory in the enclave.
+// EnclaveItem represents an artifact in the enclave.
 type enclaveItem struct {
 	Name   string
 	Path   string
 	Type   string
 	Md5    string
-	Shasum string
+	ShaSum string
 }
 
 type enclaveMap map[string]enclaveItem
@@ -38,7 +37,7 @@ var stableList []string = nil
 
 // println prints an enclave item.
 func (e enclaveItem) println() {
-	fmt.Println(e.Type, e.Md5, e.Shasum)
+	fmt.Println(e.Type, e.Md5, e.ShaSum)
 }
 
 // Get the state of the enclave when the program starts.
@@ -52,9 +51,9 @@ func init() {
 	}
 }
 
-// Scan scans the Infinigon SGX enclave binaries.
+// Scan scans the SGX enclave binaries.
 func Scan() {
-	path := env.Bin()
+	path := config.Bin()
 	err := filepath.Walk(path, walk)
 	if err != nil {
 		log.Fatal(err)
@@ -74,17 +73,17 @@ func walk(path string, _ os.FileInfo, _ error) error {
 	case mode.IsRegular():
 		key := name + ".f"
 		scannedEnclave[key] =
-			enclaveItem{Name: name, Path: path, Type: "f", Md5: getMd5(path), Shasum: getShaSum(path)}
+			enclaveItem{Name: name, Path: path, Type: "f", Md5: getMd5(path), ShaSum: getShaSum(path)}
 		scannedList = append(scannedList, key)
 	case mode.IsDir():
 		key := name + ".d"
 		scannedEnclave[key] =
-			enclaveItem{Name: name, Path: path, Type: "d", Md5: "", Shasum: getShaSum(path)}
+			enclaveItem{Name: name, Path: path, Type: "d", Md5: "", ShaSum: getShaSum(path)}
 		scannedList = append(scannedList, key)
 	default:
 		key := name + ".u"
 		scannedEnclave[key] =
-			enclaveItem{Name: name, Path: path, Type: "u", Md5: "", Shasum: getShaSum(path)}
+			enclaveItem{Name: name, Path: path, Type: "u", Md5: "", ShaSum: getShaSum(path)}
 		scannedList = append(scannedList, key)
 	}
 
@@ -147,7 +146,7 @@ func checkFileStatus() error {
 		}
 	}
 	for _, x := range scannedList {
-		if scannedEnclave[x].Shasum != stableEnclave[x].Shasum {
+		if scannedEnclave[x].ShaSum != stableEnclave[x].ShaSum {
 			if scannedEnclave[x].Type == "f" {
 				msg := fmt.Sprintf("IG17-SGX ENCLAVE: file changed from %s to %s!",
 					stableEnclave[x].Name, scannedEnclave[x].Name)

@@ -2,12 +2,13 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-// iproto runs a demostration of IG17 bc in operation.
+// iproto runs a demonstration of IG17 bc in operation.
 package main
 
 import (
 	"context"
 	"fmt"
+	"github.com/donaldww/idemo2/internal/term"
 	"log"
 	"math/rand"
 	"net"
@@ -22,9 +23,8 @@ import (
 	"github.com/mum4k/termdash/widgets/gauge"
 	"github.com/mum4k/termdash/widgets/text"
 
-	"idemo/internal/conf"
-	"idemo/internal/consensus"
-	"idemo/internal/env"
+	"github.com/donaldww/idemo2/internal/config"
+	"github.com/donaldww/idemo2/internal/consensus"
 )
 
 // playType indicates how to play a gauge.
@@ -39,7 +39,7 @@ const (
 var (
 	waitForGauge = make(chan bool)
 
-	cf = conf.NewConfig("iproto_config", env.Config())
+	cf = config.NewConfig("iproto_config", config.HomeConfig())
 
 	// Relative size of windows
 	gaugeConsensus      = cf.GetInt("gaugeConsensus")
@@ -76,8 +76,8 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 		t.Reset()
 		ctr++
 
-		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
-		writeColorf(t, cell.ColorRed, "%d\n\n", ctr)
+		term.WriteColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
+		term.WriteColorf(t, cell.ColorRed, "%d\n\n", ctr)
 
 		select {
 		default:
@@ -96,20 +96,20 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 			return
 		}
 
-		writeColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
-		writeColorf(t, cell.ColorRed, "\n %s\n", theLeader)
+		term.WriteColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
+		term.WriteColorf(t, cell.ColorRed, "\n %s\n", theLeader)
 
 		select {
 		case <-waitForGauge:
 			break
 		}
 
-		writeColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS ")
-		writeColorf(t, cell.ColorRed, "%d ", ctr)
-		writeColorf(t, cell.ColorRed, "-->\n ")
+		term.WriteColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS ")
+		term.WriteColorf(t, cell.ColorRed, "%d ", ctr)
+		term.WriteColorf(t, cell.ColorRed, "-->\n ")
 
 		for i := 0; i < numberOfMoneyBags; i++ {
-			writeColorf(t, cell.ColorRed, "💰")
+			term.WriteColorf(t, cell.ColorRed, "💰")
 			time.Sleep(moneyBagsDelay)
 		}
 		trig <- theLeader
@@ -145,6 +145,8 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 				if err := g.Absolute(prog, maxT); err != nil {
 					panic(err)
 				}
+			default:
+				panic("unhandled default case")
 			}
 			prog += step
 			if prog > maxT {

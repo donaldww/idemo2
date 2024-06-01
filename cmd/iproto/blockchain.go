@@ -7,6 +7,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/donaldww/idemo2/internal/term"
 	"time"
 
 	"github.com/mum4k/termdash/cell"
@@ -51,8 +52,8 @@ func bDump(b []Block) {
 	} else {
 		color = cell.ColorDefault
 	}
-	writeColorf(tWindow, cell.ColorRed, " 💰")
-	writeColorf(tWindow, color, " %#v\n", b[i])
+	term.WriteColorf(tWindow, cell.ColorRed, " 💰")
+	term.WriteColorf(tWindow, color, " %#v\n", b[i])
 	flag = !flag
 }
 

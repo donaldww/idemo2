@@ -7,12 +7,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/donaldww/idemo2/internal/sgx"
+	"github.com/donaldww/idemo2/internal/term"
 	"time"
 
 	"github.com/mum4k/termdash/cell"
 	"github.com/mum4k/termdash/widgets/text"
-
-	"idemo/internal/sgx"
 )
 
 type loggerMSG struct {
@@ -32,7 +32,7 @@ func writeLogger(_ context.Context, t *text.Text, loggerCH chan loggerMSG) {
 				counter = 0
 			}
 			tNow := time.Now()
-			writeColorf(t, log.color, " %s: %s\n",
+			term.WriteColorf(t, log.color, " %s: %s\n",
 				time.Date(
 					tNow.Year(), tNow.Month(), tNow.Day(),
 					tNow.Hour(), tNow.Minute(), tNow.Second(), tNow.Nanosecond(),

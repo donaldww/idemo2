@@ -2,9 +2,10 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-package env
+package config
 
 import (
+	"log"
 	"os"
 )
 
@@ -12,8 +13,12 @@ var igHome string
 
 func init() {
 	d, ok := os.LookupEnv("IGHOME")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
 	if !ok {
-		igHome = "/usr/local/ig"
+		igHome = home + "/ig"
 	} else {
 		igHome = d
 	}
@@ -39,8 +44,8 @@ func Data() string {
 	}
 }
 
-// Config returns the configuration directory.
-func Config() string {
+// HomeConfig returns the configuration directory.
+func HomeConfig() string {
 	return igHome + "/config"
 }
 

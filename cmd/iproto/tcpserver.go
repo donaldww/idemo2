@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/donaldww/idemo2/internal/term"
 	"io"
 	"net"
 	"strconv"
@@ -23,8 +24,8 @@ func reload(t *text.Text) {
 
 func update(t *text.Text) {
 	t.Reset()
-	writeColorf(t, cell.ColorCyan, "\n Balance: ")
-	writeColorf(t, cell.ColorRed, "%d", balance)
+	term.WriteColorf(t, cell.ColorCyan, "\n Balance: ")
+	term.WriteColorf(t, cell.ColorRed, "%d", balance)
 }
 
 func tcpServer(l net.Listener, t *text.Text, b *text.Text, loggerCH chan loggerMSG) {

@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"idemo/internal/conf"
+	"idemo/internal/config"
 	"idemo/internal/env"
 )
 
@@ -27,14 +27,14 @@ func main() {
 
 	tcpConnectString := func() string {
 		// If the user has entered an IP address on the commandline, then
-		// combine that address with the port found in the config file.
+		// combine that address with the port found in the serverConfig file.
 		// If the user hasn't over-ridden the default ('localhost'), then
-		// use the connect string found in the config file.
-		config := conf.NewConfig("iproto_config", env.Config())
+		// use the connect string found in the serverConfig file.
+		serverConfig := config.NewConfig("iproto_config", env.Config())
 		if *flagI != "localhost" {
-			return *flagI + ":" + config.GetString("TCPport")
+			return *flagI + ":" + serverConfig.GetString("TCPport")
 		} else {
-			return config.GetString("TCPconnect")
+			return serverConfig.GetString("TCPconnect")
 		}
 	}()
 

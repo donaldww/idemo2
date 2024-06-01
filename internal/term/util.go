@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT
 // license that can be found in the LICENSE file.
 
-package main
+package term
 
 import (
 	"fmt"
@@ -12,6 +12,6 @@ import (
 )
 
 // WriteColorf adds color and formatting parameters the Write function.
-func writeColorf(t *text.Text, color cell.Color, format string, args ...interface{}) {
+func WriteColorf(t *text.Text, color cell.Color, format string, args ...interface{}) {
 	_ = t.Write(fmt.Sprintf(format, args...), text.WriteCellOpts(cell.FgColor(color)))
 }
