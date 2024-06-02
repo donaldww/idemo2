@@ -22,7 +22,7 @@ type MSG struct {
 }
 
 // WriteLogger logs messages into the SGX monitor widget.
-func WriteLogger(_ context.Context, t *text.Text, loggerCH chan MSG, cf config.File) {
+func WriteLogger(_ context.Context, t *text.Text, loggerCH chan MSG, cf *config.Config) {
 	counter := 0
 	loggerRefresh := cf.GetInt("loggerRefresh")
 	for {
@@ -46,7 +46,7 @@ func WriteLogger(_ context.Context, t *text.Text, loggerCH chan MSG, cf config.F
 	}
 }
 
-func ScanEnclave(loggerCH chan MSG, cf config.File) {
+func ScanEnclave(loggerCH chan MSG, cf *config.Config) {
 	loggerDelay := cf.GetMilliseconds("loggerDelay")
 	for {
 		sgx.Scan()

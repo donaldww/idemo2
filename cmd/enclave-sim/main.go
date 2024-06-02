@@ -40,52 +40,20 @@ const (
 	playTypeAbsolute
 )
 
-var (
-	waitForGauge = make(chan bool)
-
-	cf = config.NewConfig("enclave_config", config.HomeConfig())
-
-	// Relative size of windows
-	gaugeConsensus      = cf.GetInt("gaugeConsensus")
-	consensusSGXmonitor = cf.GetInt("consensusSGXmonitor")
-	inputBlock          = cf.GetInt("inputBlock")
-	inputButtons        = cf.GetInt("inputButtons")
-
-	// Consensus window.
-	numberOfNodes     = cf.GetInt("numberOfNodes")
-	numberOfMoneyBags = cf.GetInt("numberOfMoneyBags")
-	consensusDelay    = cf.GetMilliseconds("consensusDelay")
-	moneyBagsDelay    = cf.GetMilliseconds("moneyBagsDelay")
-
-	// Gauge window
-	gaugeDelay    = cf.GetMilliseconds("gaugeDelay")
-	endGaugeWait  = cf.GetMilliseconds("endGaugeWait")
-	gaugeInterval = cf.GetInt("gaugeInterval")
-
-	maxTransactions = cf.GetInt("maxTransactions")
-	randFactor      = cf.GetInt("randFactor")
-
-	// preconPORT is used by the TCP connect window.
-	preconPORT = cf.GetString("TCPconnect")
-)
-
 // writeConsensus generates a randomized consensus group every 3 seconds.
-func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig chan string) {
+func writeConsensus(ctx context.Context, t *text.Text, trig chan string, waitForGaugeCH chan bool, cf *config.Config) {
 	var (
 		ctr       = 0
 		theLeader = ""
 	)
-
 	for {
 		t.Reset()
 		ctr++
-
 		term.WriteColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP WAITING FOR BLOCK: ")
 		term.WriteColorf(t, cell.ColorRed, "%d\n\n", ctr)
-
 		select {
 		default:
-			nodes := consensus.NewGroup(numberOfNodes)
+			nodes := consensus.NewGroup(cf.GetInt("numberOfNodes"))
 			for _, x := range *nodes {
 				format := fmt.Sprintf(" %s\n", x.Node)
 				if x.IsLeader {
@@ -99,43 +67,37 @@ func writeConsensus(ctx context.Context, t *text.Text, _ time.Duration, trig cha
 		case <-ctx.Done():
 			return
 		}
-
 		term.WriteColorf(t, cell.ColorBlue, "\n CONSENSUS GROUP LEADER: ")
 		term.WriteColorf(t, cell.ColorRed, "\n %s\n", theLeader)
-
 		select {
-		case <-waitForGauge:
+		case <-waitForGaugeCH:
 			break
 		}
-
 		term.WriteColorf(t, cell.ColorBlue, "\n VERIFYING BLOCK TRANSACTIONS ")
 		term.WriteColorf(t, cell.ColorRed, "%d ", ctr)
 		term.WriteColorf(t, cell.ColorRed, "-->\n ")
-
-		for i := 0; i < numberOfMoneyBags; i++ {
+		for i := 0; i < cf.GetInt("numberOfMoneyBags"); i++ {
 			term.WriteColorf(t, cell.ColorRed, "💰")
-			time.Sleep(moneyBagsDelay)
+			time.Sleep(cf.GetMilliseconds("moneyBagsDelay"))
 		}
 		trig <- theLeader
 	}
 }
 
-func maxTransactionsAdjust() int {
+func maxTransactionsAdjust(cf *config.Config) int {
 	s1 := rand.NewSource(time.Now().UnixNano())
 	r1 := rand.New(s1)
-	return r1.Intn(randFactor)
+	return r1.Intn(cf.GetInt("randFactor"))
 }
 
 var maxT int
 
 // playGauge continuously changes the displayed percent value on the
 // gauge by the step once every delay. Exits when the context expires.
-func playGauge(ctx context.Context, g *gauge.Gauge, step int,
-	delay time.Duration, pt playType) {
+func playGauge(ctx context.Context, g *gauge.Gauge, pt playType, waitForGaugeCH chan bool, cf *config.Config) {
 	prog := 0
-	maxT = maxTransactions - maxTransactionsAdjust()
-
-	ticker := time.NewTicker(delay)
+	maxT = cf.GetInt("maxTransactions") - maxTransactionsAdjust(cf)
+	ticker := time.NewTicker(cf.GetMilliseconds("gaugeDelay"))
 	defer ticker.Stop()
 	for {
 		select {
@@ -152,12 +114,12 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 			default:
 				panic("unhandled default case")
 			}
-			prog += step
+			prog += cf.GetInt("gaugeInterval")
 			if prog > maxT {
 				prog = 0
-				maxT = maxTransactions - maxTransactionsAdjust()
-				waitForGauge <- true
-				time.Sleep(endGaugeWait)
+				maxT = cf.GetInt("maxTransactions") - maxTransactionsAdjust(cf)
+				waitForGaugeCH <- true
+				time.Sleep(cf.GetMilliseconds("endGaugeWait"))
 			}
 		case <-ctx.Done():
 			return
@@ -166,9 +128,10 @@ func playGauge(ctx context.Context, g *gauge.Gauge, step int,
 }
 
 func main() {
+	cf := config.NewConfig("enclave_config")
 	// Connect to listening port before writing to the terminal box,
 	// to avoid a `hung` terminal in the case of log.Fatal(err).
-	l, err := net.Listen("tcp", preconPORT)
+	l, err := net.Listen("tcp", cf.GetString("TCPconnect"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -180,10 +143,8 @@ func main() {
 		panic(err)
 	}
 	defer t.Close()
-
 	// Adds cancel function to context, used by the quitter function.
 	ctx, cancel := context.WithCancel(context.Background())
-
 	balanceWindow, err := text.New(text.WrapAtWords())
 	if err != nil {
 		panic(err)
@@ -192,13 +153,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	// Consensus Generator Window.
 	consensusWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
-
 	// Gauge: Transaction Generator Window
 	transactionGauge, err := gauge.New(
 		gauge.Height(1),
@@ -209,21 +168,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	// Pre-Consensus Transaction Monitor
 	blockWriteWindow, err := text.New(text.WrapAtWords(), text.RollContent())
 	if err != nil {
 		panic(err)
 	}
-
 	// SGX Monitor Window
 	softwareMonitorWindow, err := text.New(text.RollContent(), text.WrapAtWords())
 	if err != nil {
 		panic(err)
 	}
-
 	title := fmt.Sprintf(" ENCLAVE SIMULATER %s - PRESS Q TO QUIT ", version)
-
 	// Container Layout.
 	c, err := cr.New(t,
 		cr.Border(linestyle.Light),
@@ -257,7 +212,7 @@ func main() {
 											cr.Bottom(
 												cr.PlaceWidget(balanceLogger),
 											),
-											cr.SplitPercent(inputBlock), // the imput field
+											cr.SplitPercent(cf.GetInt("inputBlock")), // the input field
 										),
 									),
 									cr.Bottom(
@@ -265,7 +220,7 @@ func main() {
 										cr.BorderTitle(" Blockchain Tail Monitor "),
 										cr.PlaceWidget(blockWriteWindow),
 									),
-									cr.SplitPercent(inputButtons),
+									cr.SplitPercent(cf.GetInt("inputButtons")),
 								),
 							),
 							cr.SplitPercent(40),
@@ -276,45 +231,37 @@ func main() {
 						cr.BorderTitle(" Enclave Monitor "),
 						cr.PlaceWidget(softwareMonitorWindow),
 					),
-					cr.SplitPercent(consensusSGXmonitor),
+					cr.SplitPercent(cf.GetInt("consensusSGXmonitor")),
 				),
 			),
-			cr.SplitPercent(gaugeConsensus),
+			cr.SplitPercent(cf.GetInt("gaugeConsensus")),
 		),
 	)
 	if err != nil {
 		panic(err)
 	}
-
-	// **********
 	// GOROUTINES
-	// **********
-
 	var (
-		loggerCH  = make(chan logger.MSG, 10)
-		loggerCH2 = make(chan logger.MSG, 10)
-		blockCH   = make(chan string)
+		loggerCH       = make(chan logger.MSG, 10)
+		loggerCH2      = make(chan logger.MSG, 10)
+		blockCH        = make(chan string)
+		waitForGaugeCH = make(chan bool)
 	)
-
 	// Display randomly generated nodes in the 'consensusWindow'.
-	go writeConsensus(ctx, consensusWindow, consensusDelay, blockCH)
-
+	go writeConsensus(ctx, consensusWindow, blockCH, waitForGaugeCH, cf)
 	// Play the transaction gathering gauge.
-	go playGauge(ctx, transactionGauge, gaugeInterval, gaugeDelay, playTypeAbsolute)
-
+	go playGauge(ctx, transactionGauge, playTypeAbsolute, waitForGaugeCH, cf)
 	go logger.WriteLogger(ctx, softwareMonitorWindow, loggerCH, cf)
 	go logger.ScanEnclave(loggerCH, cf)
 	go logger.WriteLogger(ctx, balanceLogger, loggerCH2, cf)
 	go blockchain.HandleBlockchain(blockWriteWindow, blockCH, maxT)
 	go tcp.Server(l, balanceLogger, balanceWindow, loggerCH2, cf)
-
 	// Define the exit handler.
 	quitter := func(k *terminalapi.Keyboard) {
 		if k.Key == 'q' || k.Key == 'Q' {
 			cancel() // generated by contextWithCancel()
 		}
 	}
-
 	// Run the program.
 	if thisErr := termdash.Run(ctx, t, c, termdash.KeyboardSubscriber(quitter)); thisErr != nil {
 		panic(thisErr)

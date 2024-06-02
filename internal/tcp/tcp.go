@@ -29,7 +29,7 @@ func update(t *text.Text) {
 	term.WriteColorf(t, cell.ColorRed, "%d", balance)
 }
 
-func Server(l net.Listener, t *text.Text, b *text.Text, loggerCH chan logger.MSG, cf config.File) {
+func Server(l net.Listener, t *text.Text, b *text.Text, loggerCH chan logger.MSG, cf *config.Config) {
 	openBalance := cf.GetInt("openBal")
 	reload(b, openBalance)
 	defer func(l net.Listener) {

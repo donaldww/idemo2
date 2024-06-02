@@ -52,7 +52,7 @@ func init() {
 
 // Scan scans the SGX enclave binaries.
 func Scan() {
-	path := config.Bin()
+	path := config.NewConfig("enclave_config").Bin()
 	err := filepath.Walk(path, walk)
 	if err != nil {
 		log.Fatal(err)
@@ -96,7 +96,7 @@ func getMd5(aString string) string {
 		log.Panic(err)
 	}
 	m := md5.New()
-	m.Write([]byte(data))
+	m.Write(data)
 	return hex.EncodeToString(m.Sum(nil))
 }
 
