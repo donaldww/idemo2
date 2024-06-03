@@ -128,7 +128,7 @@ func playGauge(ctx context.Context, g *gauge.Gauge, pt playType, waitForGaugeCH 
 }
 
 func main() {
-	cf := config.NewConfig("enclave_config")
+	cf := config.NewConfig("config")
 	// Connect to listening port before writing to the terminal box,
 	// to avoid a `hung` terminal in the case of log.Fatal(err).
 	l, err := net.Listen("tcp", cf.GetString("TCPconnect"))

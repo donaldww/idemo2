@@ -24,7 +24,7 @@ func NewConfig(filename string) *Config {
 	once.Do(func() {
 		home := getHome()
 		viper.SetConfigName(filename)
-		viper.AddConfigPath(home + "/config")
+		viper.AddConfigPath(home)
 		err := viper.ReadInConfig()
 		if err != nil {
 			panic(fmt.Errorf("fatal error config file: %s", err))

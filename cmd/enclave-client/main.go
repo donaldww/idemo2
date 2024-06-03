@@ -28,7 +28,7 @@ func main() {
 		// combine that address with the port found in the serverConfig file.
 		// If the user hasn't over-ridden the default ('localhost'), then
 		// use the connect string found in the serverConfig file.
-		serverConfig := config.NewConfig("enclave_config")
+		serverConfig := config.NewConfig("config")
 		if *flagI != "localhost" {
 			return *flagI + ":" + serverConfig.GetString("TCPport")
 		} else {

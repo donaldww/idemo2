@@ -52,7 +52,7 @@ func init() {
 
 // Scan scans the SGX enclave binaries.
 func Scan() {
-	path := config.NewConfig("enclave_config").Bin()
+	path := config.NewConfig("config").Bin()
 	err := filepath.Walk(path, walk)
 	if err != nil {
 		log.Fatal(err)

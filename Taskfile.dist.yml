@@ -1,0 +1,26 @@
+version: "3"
+
+silent: true
+
+tasks:
+  install:
+    deps: [build:sim, build:client, setup]
+
+  build:sim:
+    cmds:
+      - |
+        cd {{.USER_WORKING_DIR}}/cmd/enclave-sim
+        go install
+
+  build:client:
+    cmds:
+      - |
+        cd {{.USER_WORKING_DIR}}/cmd/enclave-client
+        go install
+
+  setup:
+    cmds:
+      - mkdir -p $HOME/.config/enclave/bin
+      - cp config/config.toml $HOME/.config/enclave
+      - touch $HOME/.config/enclave/bin/asdf
+      - touch $HOME/.config/enclave/bin/1234
