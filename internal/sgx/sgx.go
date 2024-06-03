@@ -67,7 +67,6 @@ func walk(path string, _ os.FileInfo, _ error) error {
 	}
 	mode := fileInfo.Mode()
 	name := fileInfo.Name()
-
 	switch {
 	case mode.IsRegular():
 		key := name + ".f"
@@ -85,7 +84,6 @@ func walk(path string, _ os.FileInfo, _ error) error {
 			enclaveItem{Name: name, Path: path, Type: "u", Md5: "", ShaSum: getShaSum(path)}
 		scannedList = append(scannedList, key)
 	}
-
 	return nil
 }
 

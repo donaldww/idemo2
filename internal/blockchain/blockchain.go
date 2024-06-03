@@ -47,7 +47,6 @@ func bDump(b []Block) {
 		tWindow.Reset()
 	}
 	var color cell.Color
-
 	if flag {
 		color = cell.ColorMagenta
 	} else {
@@ -60,23 +59,19 @@ func bDump(b []Block) {
 
 // HandleBlockchain is the main point of for the blockchain window.
 func HandleBlockchain(t *text.Text, trig chan string, maxT int) {
+	// tWindow is global, the program will crash if removed!
 	tWindow = t
-
 	// Create genesis block.
-	tm := time.Now()
-	genesisBlock := Block{Nonce: 0, Timestamp: tm.String(),
+	genesisBlock := Block{Nonce: 0, Timestamp: time.Now().String(),
 		Data: "", NumberOfTransactions: 0, Hash: "", PrevHash: "",
 		ConsensusLeader: "GENESIS BLOCK"}
 	bc = append(bc, genesisBlock)
-
 	// Dump genesis block.
 	bDump(bc)
-
 	for {
-		pm := maxT
 		leader = <-trig
 		if leader != "" {
-			go handleBlocks(pm)
+			go handleBlocks(maxT)
 		}
 	}
 }
@@ -98,15 +93,12 @@ func isBlockValid(newBlock, oldBlock Block) bool {
 	if oldBlock.Nonce+1 != newBlock.Nonce {
 		return false
 	}
-
 	if oldBlock.Hash != newBlock.PrevHash {
 		return false
 	}
-
 	if calculateHash(newBlock) != newBlock.Hash {
 		return false
 	}
-
 	return true
 }
 
@@ -130,12 +122,10 @@ func calculateHash(block Block) string {
 func generateBlock(oldBlock Block, amount int) (Block, error) {
 	var newBlock Block
 	t := time.Now()
-
 	u3, err := uuid.NewV3(uuid.NamespaceURL, []byte(leader))
 	if err != nil {
 		panic(err)
 	}
-
 	newBlock.Nonce = oldBlock.Nonce + 1
 	newBlock.Timestamp = t.String()
 	newBlock.ConsensusLeader = leader
@@ -143,6 +133,5 @@ func generateBlock(oldBlock Block, amount int) (Block, error) {
 	newBlock.NumberOfTransactions = amount
 	newBlock.PrevHash = oldBlock.Hash
 	newBlock.Hash = calculateHash(newBlock)
-
 	return newBlock, nil
 }

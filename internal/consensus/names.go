@@ -518,4 +518,5 @@ var NodeIds = []string{
 	"jonathan.metcalfe, 50.62.114.107",
 	"madeleine.robertson, 201.133.2.116",
 	"evan.marshall, 127.170.15.36",
+	"thanos.vassilakis, 246.206.35.122",
 }

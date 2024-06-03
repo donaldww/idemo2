@@ -1,0 +1,36 @@
+# Config file for iproto
+
+# Consensus widget
+	numberOfNodes = 19
+	numberOfMoneyBags = 17
+	consensusDelay = 1500 # milliseconds
+	moneyBagsDelay = 40 # milliseconds
+
+# SGX monitor widget (logger)
+	loggerDelay   = 2000 # milliseconds
+	loggerRefresh = 3
+
+#	Gauge widget
+	gaugeDelay    = 1 # millisecond
+	endGaugeWait  = 500 # milliseconds
+	gaugeInterval = 1
+
+# Parameters for generating transactions for gauge widget
+	maxTransactions = 2100
+	randFactor      = 297
+
+
+# Left side: Relative size of gauge vs. consensus windows
+	gaugeConsensus = 10
+	consensusSGXmonitor = 85
+	inputBlock = 80
+	inputButtons = 20
+
+# Opening Balance
+	openBal = 500
+	accountID = "030c8d4c-4e70-4cfe-a948-e5039cbf8f21" # title
+
+# TCP server
+	TCPconnect = "localhost:5555"
+	TCPport = "5555"
+

@@ -38,22 +38,18 @@ func Server(l net.Listener, t *text.Text, b *text.Text, loggerCH chan logger.MSG
 			panic(err)
 		}
 	}(l)
-
 WAITING:
 	t.Reset()
 	msg := fmt.Sprintf("Waiting for connection...")
 	loggerCH <- logger.MSG{Msg: msg, Color: cell.ColorYellow}
-
 	c, err := l.Accept()
 	if err != nil {
 		t.Reset()
 		loggerCH <- logger.MSG{Msg: "Problem with node connection.", Color: cell.ColorYellow}
 		goto WAITING
 	}
-
 	t.Reset()
 	loggerCH <- logger.MSG{Msg: "Node connected.", Color: cell.ColorYellow}
-
 	for {
 		netData, thisErr := bufio.NewReader(c).ReadString('\n')
 		if thisErr == io.EOF {
@@ -61,11 +57,9 @@ WAITING:
 			loggerCH <- logger.MSG{Msg: "Node connection closed.", Color: cell.ColorYellow}
 			goto WAITING
 		}
-
 		// '\n' must be trimmed from netData because ReadString() doesn't strip
 		// the EOL character for you.
 		cmd := strings.Split(strings.TrimRight(netData, "\n"), " ")
-
 		switch len(cmd) {
 		case 2:
 			amt, thisErr2 := strconv.Atoi(cmd[1])
